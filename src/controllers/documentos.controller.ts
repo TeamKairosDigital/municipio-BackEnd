@@ -1,0 +1,49 @@
+import { Controller, Post, Body, Get, Query, UseInterceptors, NestInterceptor, UploadedFile, Param } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express/multer';
+import { createFileDto } from 'src/models/dto/create-file.dto';
+import { DocumentosService } from 'src/services/documentos.service';
+import { S3Service } from 'src/services/s3.service';
+
+@Controller('documentos')
+export class DocumentosController {
+
+    constructor(
+        private documentosService: DocumentosService,
+        private s3Service: S3Service
+    ) { }
+
+    @Get('getDocumentsWithFiles')
+    async getDocumentsWithFiles(@Query('anualidad') anualidad: string) {
+        return this.documentosService.getDocumentsWithFilesByYear(anualidad);
+    }
+
+    @Post('create-file')
+    @UseInterceptors(FileInterceptor('archivo'))
+    async postCreateFile(
+        @Body() createFileDto: createFileDto,
+        @UploadedFile() file: Express.Multer.File
+    ) {
+        // Llamar al servicio para procesar el archivo y guardar la información
+        const result = await this.documentosService.createFile(createFileDto, file);
+
+        // Retornar una respuesta
+        return {
+            message: 'File uploaded successfully',
+            // fileUrl: await this.s3Service.getFileURL(file.originalname), // Obtener la URL pública del archivo
+            fileData: result
+        };
+    }
+
+    @Get('getFileURL/:id')
+    async getFileURL(@Param('id') id: number): Promise<{ url: string }> {
+        const url = await this.s3Service.getFileURL(id);
+        return { url }; // Devuelve un objeto JSON
+    }
+
+    @Get('base64/:id')
+    async getFileBase64(@Param('id') id: number): Promise<{ base64: string }> {
+        const base64 = await this.s3Service.getFileBase64(id);
+        return { base64 };
+    }
+
+}
