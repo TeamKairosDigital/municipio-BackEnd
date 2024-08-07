@@ -1,6 +1,7 @@
 import { Controller, Post, Body, Get, Query, UseInterceptors, NestInterceptor, UploadedFile, Param } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express/multer';
 import { createFileDto } from 'src/models/dto/create-file.dto';
+import { periodoDto } from 'src/models/dto/periodo';
 import { DocumentosService } from 'src/services/documentos.service';
 import { S3Service } from 'src/services/s3.service';
 
@@ -23,6 +24,7 @@ export class DocumentosController {
         @Body() createFileDto: createFileDto,
         @UploadedFile() file: Express.Multer.File
     ) {
+
         // Llamar al servicio para procesar el archivo y guardar la información
         const result = await this.documentosService.createFile(createFileDto, file);
 
@@ -44,6 +46,11 @@ export class DocumentosController {
     async getFileBase64(@Param('id') id: number): Promise<{ base64: string }> {
         const base64 = await this.s3Service.getFileBase64(id);
         return { base64 };
+    }
+
+    @Get('periodos')
+    async getPeriodos(): Promise<periodoDto[]> {
+        return this.documentosService.getPeriodos();
     }
 
 }

@@ -1,4 +1,5 @@
 export class createFileDto {
+    idArchivo: number;
     nombreArchivo: string;
     documentoId: number;
     periodoId: number;

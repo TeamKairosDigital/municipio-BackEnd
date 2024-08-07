@@ -5,6 +5,8 @@ import { Documentos } from 'src/models/documentos.entity';
 import { createFileDto } from 'src/models/dto/create-file.dto';
 import { Repository } from 'typeorm';
 import { S3Service } from './s3.service';
+import { Periodos } from 'src/models/periodos.entity';
+import { periodoDto } from 'src/models/dto/periodo';
 
 @Injectable()
 export class DocumentosService {
@@ -14,6 +16,8 @@ export class DocumentosService {
         private documentosRepository: Repository<Documentos>,
         @InjectRepository(Archivos)
         private ArchivosRepository: Repository<Archivos>,
+        @InjectRepository(Periodos)
+        private PeriodosRepository: Repository<Periodos>,
         private s3Service: S3Service
     ) { }
 
@@ -59,6 +63,18 @@ export class DocumentosService {
         });
 
         return this.ArchivosRepository.save(newDocument)
+    }
+
+
+    async getPeriodos(): Promise<periodoDto[]> {
+
+        const queryBuilder = this.PeriodosRepository.createQueryBuilder('Periodo')
+            .where('Periodo.activo = 1')
+            .select(['Periodo.id', 'Periodo.nombrePeriodo']);
+
+        const PeridoList = await queryBuilder.getMany();
+
+        return PeridoList;
     }
 
 }

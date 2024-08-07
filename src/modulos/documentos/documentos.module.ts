@@ -5,9 +5,10 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { Documentos } from 'src/models/documentos.entity';
 import { Archivos } from 'src/models/archivos.entity';
 import { S3Module } from '../s3/s3.module';
+import { Periodos } from 'src/models/periodos.entity';
 
 @Module({
-    imports: [TypeOrmModule.forFeature([Documentos, Archivos]), S3Module],
+    imports: [TypeOrmModule.forFeature([Documentos, Archivos, Periodos]), S3Module],
     controllers: [DocumentosController],
     providers: [DocumentosService]
 })

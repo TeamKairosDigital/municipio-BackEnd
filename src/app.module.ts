@@ -8,6 +8,7 @@ import { S3Module } from './modulos/s3/s3.module';
 import { S3Service } from './services/s3.service';
 import { S3Controller } from './controllers/s3.controller';
 import { ConfigModule } from '@nestjs/config';
+import { Periodos } from './models/periodos.entity';
 
 @Module({
   imports: [
@@ -31,7 +32,7 @@ import { ConfigModule } from '@nestjs/config';
     ConfigModule.forRoot({
       isGlobal: true, // Esto hace que ConfigService esté disponible globalmente
     }),
-    TypeOrmModule.forFeature([Documentos, Archivos]),
+    TypeOrmModule.forFeature([Documentos, Archivos, Periodos]),
     S3Module,
   ],
   controllers: [DocumentosController, S3Controller],
