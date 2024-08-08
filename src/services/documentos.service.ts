@@ -1,9 +1,9 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Archivos } from 'src/models/archivos.entity';
 import { Documentos } from 'src/models/documentos.entity';
 import { createFileDto } from 'src/models/dto/create-file.dto';
-import { Repository } from 'typeorm';
+import { Connection, Repository } from 'typeorm';
 import { S3Service } from './s3.service';
 import { Periodos } from 'src/models/periodos.entity';
 import { periodoDto } from 'src/models/dto/periodo';
@@ -18,20 +18,32 @@ export class DocumentosService {
         private ArchivosRepository: Repository<Archivos>,
         @InjectRepository(Periodos)
         private PeriodosRepository: Repository<Periodos>,
-        private s3Service: S3Service
+        private s3Service: S3Service,
+        private connection: Connection
     ) { }
 
     async getDocumentsWithFilesByYear(anualidad: string): Promise<any[]> {
-        const queryBuilder = this.documentosRepository.createQueryBuilder('documentos')
-            .leftJoinAndSelect('documentos.archivos', 'archivos')
-            .leftJoinAndSelect('archivos.periodo', 'periodos')
-            // .where('documentos.tipoDocumentoId = :tipoDocumentoId', { tipoDocumentoId })
-            .where('(archivos.anualidad = :anualidad OR archivos.anualidad IS NULL)', { anualidad })
-            .select(['documentos.id', 'documentos.nombreDocumento', 'documentos.ley', 'documentos.categoria', 'archivos', 'periodos'])
-            .orderBy('documentos.id', 'ASC');
+        // Paso 1: Obtener todos los documentos
+        const documents = await this.documentosRepository.find({
+            relations: ['archivos', 'archivos.periodo'], // Asegúrate de incluir las relaciones necesarias
+            order: { id: 'ASC' } // Ordenar por id si es necesario
+        });
 
-        const documents = await queryBuilder.getMany();
+        // Paso 2: Obtener los archivos correspondientes
+        const archivos = await this.ArchivosRepository.find({
+            where: [
+                { anualidad: anualidad },
+                { anualidad: null } // Para incluir archivos sin anualidad
+            ],
+            relations: ['periodo'] // Asegúrate de incluir las relaciones necesarias
+        });
 
+        // Asociar archivos a sus documentos
+        documents.forEach(document => {
+            document.archivos = archivos.filter(archivo => archivo.documentoId === document.id);
+        });
+
+        // Transformar y devolver los datos
         return documents.map(document => ({
             id: document.id,
             nombreDocumento: document.nombreDocumento,
@@ -46,6 +58,9 @@ export class DocumentosService {
             }))
         }));
     }
+
+
+
 
 
     async createFile(crearArchivo: createFileDto, file: Express.Multer.File) {
@@ -75,6 +90,42 @@ export class DocumentosService {
         const PeridoList = await queryBuilder.getMany();
 
         return PeridoList;
+    }
+
+
+    async deleteDocumentAndFile(documentId: number): Promise<void> {
+        const queryRunner = this.connection.createQueryRunner();
+        await queryRunner.connect();
+        await queryRunner.startTransaction();
+
+        try {
+            const document = await this.ArchivosRepository.findOne({ where: { id: documentId } });
+
+            if (!document) {
+                throw new NotFoundException('Document not found');
+            }
+
+            const fileName = document.nombreArchivo;
+
+            // Eliminar el documento de la base de datos
+            await queryRunner.manager.delete(Archivos, documentId);
+
+            // Log para verificar que la eliminación en la base de datos fue exitosa
+            console.log('Document deleted from database:', documentId);
+
+            // Eliminar el archivo de S3
+            await this.s3Service.deleteFile(fileName);
+
+            // Log para verificar que el archivo fue eliminado de S3
+            console.log('File deleted from S3:', fileName);
+
+            await queryRunner.commitTransaction();
+        } catch (error) {
+            await queryRunner.rollbackTransaction();
+            throw new InternalServerErrorException('Failed to delete document and file');
+        } finally {
+            await queryRunner.release();
+        }
     }
 
 }

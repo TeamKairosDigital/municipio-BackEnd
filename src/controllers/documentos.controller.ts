@@ -1,4 +1,4 @@
-import { Controller, Post, Body, Get, Query, UseInterceptors, NestInterceptor, UploadedFile, Param } from '@nestjs/common';
+import { Controller, Post, Body, Get, Query, UseInterceptors, NestInterceptor, UploadedFile, Param, ParseIntPipe, HttpStatus, Res, Delete } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express/multer';
 import { createFileDto } from 'src/models/dto/create-file.dto';
 import { periodoDto } from 'src/models/dto/periodo';
@@ -51,6 +51,22 @@ export class DocumentosController {
     @Get('periodos')
     async getPeriodos(): Promise<periodoDto[]> {
         return this.documentosService.getPeriodos();
+    }
+
+
+    @Delete(':id')
+    async deleteDocument(@Param('id', ParseIntPipe) id: number, @Res() res) {
+        try {
+            await this.documentosService.deleteDocumentAndFile(id);
+            return res.status(HttpStatus.OK).json({
+                message: 'Document and file deleted successfully',
+            });
+        } catch (error) {
+            return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
+                message: 'Error deleting document and file',
+                error: error.message,
+            });
+        }
     }
 
 }

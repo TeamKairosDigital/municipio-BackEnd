@@ -1,6 +1,6 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { S3Client, PutObjectCommand, ListObjectsCommand, GetObjectCommand, ObjectCannedACL } from '@aws-sdk/client-s3';
+import { S3Client, PutObjectCommand, ListObjectsCommand, GetObjectCommand, ObjectCannedACL, DeleteObjectCommand } from '@aws-sdk/client-s3';
 import * as fs from 'fs';
 import { Readable } from 'stream';
 import { Upload } from '@aws-sdk/lib-storage';
@@ -115,5 +115,23 @@ export class S3Service {
             stream.on('end', () => resolve(Buffer.concat(chunks)));
             stream.on('error', reject);
         });
+    }
+
+    async deleteFile(fileName: string): Promise<void> {
+
+        const params = {
+            Bucket: process.env.AWS_BUCKET_NAME,
+            Key: fileName,
+        };
+
+        const command = new DeleteObjectCommand(params);
+
+        try {
+            await this.client.send(command);
+            console.log('File deleted successfully from S3');
+        } catch (error) {
+            console.error('Error deleting file from S3:', error);
+            throw new InternalServerErrorException('Failed to delete file from S3');
+        }
     }
 }
