@@ -12,25 +12,23 @@ import { Periodos } from './models/periodos.entity';
 
 @Module({
   imports: [
-    ConfigModule.forRoot(),
     TypeOrmModule.forRoot({
-      type: 'mssql',
+      type: 'mysql',
       host: 'localhost',
-      port: 1433,
+      port: 3306,
       username: 'soporte',
       password: '12345',
-      database: 'AlmacenArchivos',
+      database: 'almacenArchivos',
       entities: [__dirname + '/**/*.entity{.ts,.js}'],
       synchronize: false, // Esto se utiliza si no esta creado las tablas
-      options: {
-        encrypt: true, // Esta opción asegura que la conexión esté cifrada
-      },
-      extra: {
-        trustServerCertificate: true, // en prod habra que ponerlo en false
-      },
+      // extra: {
+      //   trustServerCertificate: true, // en prod habra que ponerlo en false
+      // },
+      // logging: true
     }),
     ConfigModule.forRoot({
       isGlobal: true, // Esto hace que ConfigService esté disponible globalmente
+      // envFilePath: __dirname + '../../../.env',
     }),
     TypeOrmModule.forFeature([Documentos, Archivos, Periodos]),
     S3Module,

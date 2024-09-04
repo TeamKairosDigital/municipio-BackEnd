@@ -6,12 +6,12 @@ import { S3Service } from 'src/services/s3.service';
 export class S3Controller {
     constructor(private readonly s3Service: S3Service) { }
 
-    @Post('uploadFile')
-    @UseInterceptors(FileInterceptor('file'))
-    async uploadFile(@UploadedFile() file) {
-        const result = await this.s3Service.uploadFile(file);
-        return { message: 'Archivo subido', result: result };
-    }
+    // @Post('uploadFile')
+    // @UseInterceptors(FileInterceptor('file'))
+    // async uploadFile(@UploadedFile() file) {
+    //     const result = await this.s3Service.uploadFile(file, );
+    //     return { message: 'Archivo subido', result: result };
+    // }
 
     @Get('getFiles')
     async getFiles() {

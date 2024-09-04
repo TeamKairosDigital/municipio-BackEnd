@@ -1,6 +1,8 @@
 import { Controller, Post, Body, Get, Query, UseInterceptors, NestInterceptor, UploadedFile, Param, ParseIntPipe, HttpStatus, Res, Delete } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express/multer';
+import { ApiResponse } from 'src/models/ApiResponse';
 import { createFileDto } from 'src/models/dto/create-file.dto';
+import { DocumentosFiltrosDto } from 'src/models/dto/DocumentosFiltrosDto';
 import { periodoDto } from 'src/models/dto/periodo';
 import { DocumentosService } from 'src/services/documentos.service';
 import { S3Service } from 'src/services/s3.service';
@@ -13,9 +15,18 @@ export class DocumentosController {
         private s3Service: S3Service
     ) { }
 
-    @Get('getDocumentsWithFiles')
-    async getDocumentsWithFiles(@Query('anualidad') anualidad: string) {
-        return this.documentosService.getDocumentsWithFilesByYear(anualidad);
+    @Post('getDocumentsWithFiles')
+    async getDocumentsWithFiles(@Body() data: DocumentosFiltrosDto): Promise<ApiResponse<any[]>> {
+
+        const documents = await this.documentosService.getDocumentsWithFilesByYear(data);
+
+        return {
+            success: true,
+            statusCode: HttpStatus.OK,
+            message: 'Documents retrieved successfully',
+            data: documents
+        };
+
     }
 
     @Post('create-file')
@@ -23,50 +34,81 @@ export class DocumentosController {
     async postCreateFile(
         @Body() createFileDto: createFileDto,
         @UploadedFile() file: Express.Multer.File
-    ) {
+    ): Promise<ApiResponse<any>> {
 
         // Llamar al servicio para procesar el archivo y guardar la información
         const result = await this.documentosService.createFile(createFileDto, file);
 
         // Retornar una respuesta
         return {
-            message: 'File uploaded successfully',
-            // fileUrl: await this.s3Service.getFileURL(file.originalname), // Obtener la URL pública del archivo
-            fileData: result
+            success: true,
+            statusCode: HttpStatus.CREATED,
+            message: 'Archivo cargado exitosamente',
+            data: result
         };
-    }
 
-    @Get('getFileURL/:id')
-    async getFileURL(@Param('id') id: number): Promise<{ url: string }> {
-        const url = await this.s3Service.getFileURL(id);
-        return { url }; // Devuelve un objeto JSON
-    }
-
-    @Get('base64/:id')
-    async getFileBase64(@Param('id') id: number): Promise<{ base64: string }> {
-        const base64 = await this.s3Service.getFileBase64(id);
-        return { base64 };
     }
 
     @Get('periodos')
-    async getPeriodos(): Promise<periodoDto[]> {
-        return this.documentosService.getPeriodos();
+    async getPeriodos(): Promise<ApiResponse<periodoDto[]>> {
+
+        const periodos = await this.documentosService.getPeriodos();
+        return {
+            success: true,
+            statusCode: HttpStatus.OK,
+            message: 'Periods retrieved successfully',
+            data: periodos
+        };
+
     }
 
-
     @Delete(':id')
-    async deleteDocument(@Param('id', ParseIntPipe) id: number, @Res() res) {
+    async deleteDocument(@Param('id', ParseIntPipe) id: number, @Res() res): Promise<ApiResponse<void>> {
+
         try {
             await this.documentosService.deleteDocumentAndFile(id);
             return res.status(HttpStatus.OK).json({
-                message: 'Document and file deleted successfully',
+                success: true,
+                statusCode: HttpStatus.OK,
+                message: 'Documento y archivo eliminados exitosamente',
             });
         } catch (error) {
             return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
-                message: 'Error deleting document and file',
-                error: error.message,
+                success: false,
+                statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+                message: 'Error al eliminar documento y archivo',
+                errors: error.message,
             });
         }
+
+    }
+
+
+    @Get('getFileURL/:id')
+    async getFileURL(@Param('id') id: number): Promise<ApiResponse<{ url: string }>> {
+
+        const url = await this.s3Service.getFileURL(id);
+
+        return {
+            success: true,
+            statusCode: HttpStatus.OK,
+            message: 'URL del archivo recuperada con éxito',
+            data: { url }
+        };
+
+    }
+
+    @Get('base64/:id')
+    async getFileBase64(@Param('id') id: number): Promise<ApiResponse<{ base64: string }>> {
+
+        const base64 = await this.s3Service.getFileBase64(id);
+        return {
+            success: true,
+            statusCode: HttpStatus.OK,
+            message: 'Archivo Base64 recuperado exitosamente',
+            data: { base64 }
+        };
+
     }
 
 }

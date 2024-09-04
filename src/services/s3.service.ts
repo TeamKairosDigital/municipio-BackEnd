@@ -26,11 +26,13 @@ export class S3Service {
         });
     }
 
-    async uploadFile(file: Express.Multer.File): Promise<any> {
+
+    // Subir archvo en S3
+    async uploadFile(file: Express.Multer.File, fileName: string): Promise<any> {
         const stream = Readable.from(file.buffer);
         const uploadParams = {
             Bucket: this.configService.get<string>('AWS_BUCKET_NAME'),
-            Key: file.originalname,
+            Key: fileName,
             Body: stream,
             ContentType: file.mimetype
             // Omite la propiedad ACL
@@ -46,26 +48,37 @@ export class S3Service {
         return parallelUploads3.done();
     }
 
+    // Obtener la lista de archivos en S3
     async getFiles(): Promise<any> {
+
         const command = new ListObjectsCommand({
             Bucket: this.configService.get<string>('AWS_BUCKET_NAME'),
         });
+
         return await this.client.send(command);
+
     }
 
+    // Obtener un archivo especifico por nombre en S3
     async getFile(fileName: string): Promise<any> {
+
         const command = new GetObjectCommand({
             Bucket: this.configService.get<string>('AWS_BUCKET_NAME'),
             Key: fileName,
         });
+
         return await this.client.send(command);
+
     }
 
+    // Descagar archivo en S3
     async downloadFile(fileName: string): Promise<void> {
+
         const command = new GetObjectCommand({
             Bucket: this.configService.get<string>('AWS_BUCKET_NAME'),
             Key: fileName,
         });
+
         const result = await this.client.send(command);
 
         if (result.Body instanceof Readable) {
@@ -73,9 +86,12 @@ export class S3Service {
         } else {
             throw new Error('Unexpected Body type');
         }
+
     }
 
+    //Obtener URL de archivo en S3
     async getFileURL(id: number): Promise<string> {
+
         const archivo = await this.archivosRepository.findOne({
             where: { id: id }
         });
@@ -85,11 +101,15 @@ export class S3Service {
         }
 
         return `https://${this.configService.get<string>('AWS_BUCKET_NAME')}.s3.amazonaws.com/${archivo.nombreArchivo}`;
+
     }
 
+    // Obtener archivo de S3 en base64
     async getFileBase64(id: number): Promise<string> {
+
         // Obtén el archivo desde la base de datos
         const archivo = await this.archivosRepository.findOneBy({ id });
+        console.log()
 
         if (!archivo) {
             throw new Error('Archivo no encontrado');
@@ -100,23 +120,31 @@ export class S3Service {
             Key: archivo.nombreArchivo, // Usa el nombre del archivo obtenido de la base de datos
         };
 
+        if (!params.Bucket) {
+            throw new Error('Bucket name is not defined');
+        }
+
         const command = new GetObjectCommand(params);
         const data = await this.client.send(command);
         const fileContent = await this.streamToBuffer(data.Body);
 
         return fileContent.toString('base64');
+
     }
 
     // Convierte el stream a buffer
     private async streamToBuffer(stream: any): Promise<Buffer> {
+
         return new Promise((resolve, reject) => {
             const chunks: Uint8Array[] = [];
             stream.on('data', (chunk: Uint8Array) => chunks.push(chunk));
             stream.on('end', () => resolve(Buffer.concat(chunks)));
             stream.on('error', reject);
         });
+
     }
 
+    // Eliminar archivo de S3
     async deleteFile(fileName: string): Promise<void> {
 
         const params = {
@@ -133,5 +161,6 @@ export class S3Service {
             console.error('Error deleting file from S3:', error);
             throw new InternalServerErrorException('Failed to delete file from S3');
         }
+
     }
 }

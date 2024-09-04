@@ -15,6 +15,5 @@ export class TipoDocumento {
     @Column()
     fechaCreacion: Date;
 
-    @OneToMany(() => Documentos, (documento) => documento.tipoDocumento)
-    documentos: Documentos[];
+
 }

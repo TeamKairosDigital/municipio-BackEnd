@@ -7,6 +7,8 @@ import { Connection, Repository } from 'typeorm';
 import { S3Service } from './s3.service';
 import { Periodos } from 'src/models/periodos.entity';
 import { periodoDto } from 'src/models/dto/periodo';
+import { DocumentosFiltrosDto } from 'src/models/dto/DocumentosFiltrosDto';
+import { v4 as uuidv4 } from 'uuid';
 
 @Injectable()
 export class DocumentosService {
@@ -22,20 +24,29 @@ export class DocumentosService {
         private connection: Connection
     ) { }
 
-    async getDocumentsWithFilesByYear(anualidad: string): Promise<any[]> {
-        // Paso 1: Obtener todos los documentos
+    async getDocumentsWithFilesByYear(data: DocumentosFiltrosDto): Promise<any[]> {
+        const whereConditions: any = {};
+
+        // Agrega la condición 'ley' solo si tiene un valor
+        if (data.ley != '-1') {
+            whereConditions.ley = data.ley;
+        }
+
+        // Obtener todos los documentos
         const documents = await this.documentosRepository.find({
-            relations: ['archivos', 'archivos.periodo'], // Asegúrate de incluir las relaciones necesarias
-            order: { id: 'ASC' } // Ordenar por id si es necesario
+            where: whereConditions,
+            relations: ['archivos', 'archivos.periodo'],
+            order: { id: 'ASC' } // Ordenar
         });
 
         // Paso 2: Obtener los archivos correspondientes
         const archivos = await this.ArchivosRepository.find({
             where: [
-                { anualidad: anualidad },
+                { anualidad: data.year },
+
                 { anualidad: null } // Para incluir archivos sin anualidad
             ],
-            relations: ['periodo'] // Asegúrate de incluir las relaciones necesarias
+            relations: ['periodo']
         });
 
         // Asociar archivos a sus documentos
@@ -54,22 +65,26 @@ export class DocumentosService {
                 nombreArchivo: archivo.nombreArchivo,
                 periodoId: archivo.periodo ? archivo.periodo.id : null,
                 periodo: archivo.periodo ? archivo.periodo.nombrePeriodo : null,
-                anualidad: archivo.anualidad
+                anualidad: archivo.anualidad,
+                userId: archivo.UsersMunicipalityId
             }))
         }));
     }
 
 
-
-
-
     async createFile(crearArchivo: createFileDto, file: Express.Multer.File) {
 
+        // Generar un ID único
+        const uniqueId = uuidv4();
+
+        // Crear un nombre de archivo único concatenando el ID con el nombre original
+        const uniqueFileName = `${uniqueId}-${file.originalname}`;
+
         // Subir el archivo a S3
-        await this.s3Service.uploadFile(file);
+        await this.s3Service.uploadFile(file, uniqueFileName);
 
         const newDocument = this.ArchivosRepository.create({
-            nombreArchivo: file.originalname,
+            nombreArchivo: uniqueFileName,
             documentoId: crearArchivo.documentoId,
             periodoId: crearArchivo.periodoId,
             anualidad: crearArchivo.anualidad,
@@ -94,6 +109,7 @@ export class DocumentosService {
 
 
     async deleteDocumentAndFile(documentId: number): Promise<void> {
+
         const queryRunner = this.connection.createQueryRunner();
         await queryRunner.connect();
         await queryRunner.startTransaction();
@@ -126,6 +142,7 @@ export class DocumentosService {
         } finally {
             await queryRunner.release();
         }
+
     }
 
 }

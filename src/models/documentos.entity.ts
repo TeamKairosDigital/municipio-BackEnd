@@ -17,16 +17,10 @@ export class Documentos {
     categoria: string;
 
     @Column()
-    tipoDocumentoId: number;
-
-    @Column()
     activo: boolean;
 
     @Column()
     fechaCreacion: Date;
-
-    @ManyToOne(() => TipoDocumento, (tipoDocumento) => tipoDocumento.documentos)
-    tipoDocumento: TipoDocumento;
 
     @OneToMany(() => Archivos, (archivo) => archivo.documento)
     archivos: Archivos[];
