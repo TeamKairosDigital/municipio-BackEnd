@@ -66,7 +66,7 @@ export class DocumentosService {
                 periodoId: archivo.periodo ? archivo.periodo.id : null,
                 periodo: archivo.periodo ? archivo.periodo.nombrePeriodo : null,
                 anualidad: archivo.anualidad,
-                userId: archivo.UsersMunicipalityId
+                userId: archivo.user
             }))
         }));
     }

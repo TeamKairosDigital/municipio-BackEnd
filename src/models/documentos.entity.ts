@@ -1,5 +1,4 @@
 import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, OneToMany } from 'typeorm';
-import { TipoDocumento } from './tipoDocumento.entity';
 import { Archivos } from './archivos.entity';
 
 @Entity()

@@ -1,6 +1,7 @@
-import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, OneToMany } from 'typeorm';
-import { UsersMunicipality } from './usersMunicipality.entity';
+import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, OneToMany, JoinColumn } from 'typeorm';
+import { Users } from './users.entity';
 import { avisoPrivacidadArchivos } from './avisoPrivacidadArchivos.entity';
+import { Municipality } from './Municipality.entity';
 
 @Entity()
 export class avisoPrivacidad {
@@ -17,10 +18,20 @@ export class avisoPrivacidad {
     fechaCreacion: Date;
 
     @Column()
-    UsuarioCreacionId: number;
+    UsuarioCreacionId: number
 
-    @ManyToOne(() => UsersMunicipality, (user) => user.avisoPrivacidad)
-    UsersMunicipality: UsersMunicipality;
+    @Column()
+    municipality_id: number
+
+    // Relación con la entidad Users
+    @ManyToOne(() => Users, (User) => User.archivos)
+    @JoinColumn({ name: 'UsuarioCreacionId' })
+    user: Users;
+
+    // Relación con la entidad Municipality
+    @ManyToOne(() => Municipality, (municipality) => municipality.users)
+    @JoinColumn({ name: 'municipality_id' })
+    municipality: Municipality;
 
     @OneToMany(() => avisoPrivacidadArchivos, (avisoPrivacidadArchivo) => avisoPrivacidadArchivo.avisoPrivacidadId)
     avisoPrivacidadArchivos: avisoPrivacidadArchivos[];
