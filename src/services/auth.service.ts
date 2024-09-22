@@ -28,14 +28,15 @@ export class AuthService {
     }
 
     async validateUser(username: string, password: string): Promise<LoginDto | null> {
-        const user = await this.usersService.findByUsername(username);
+        // Cargar el usuario y la relación 'municipality'
+        const user = await this.usersService.findByUsername(username, ['municipality']);
 
         if (user && user.Pass === password) {  // Aquí debes usar hashing real en producción
             // Retornamos un LoginDto con la información que queremos exponer
             const loginDto = new LoginDto();
             loginDto.id = user.id;
             loginDto.username = user.UserName;
-
+            loginDto.municipality_id = user.municipality.id;
             return loginDto;
 
         }
@@ -53,6 +54,7 @@ export class AuthService {
     async generateJwtToken(userId: number): Promise<string> {
         return this.jwtService.signAsync({ userId }, { secret: 'JWT_SECRET' });
     }
+
 
 
 }

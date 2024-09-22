@@ -12,9 +12,12 @@ export class UserService {
     ) { }
 
     // Método para encontrar un usuario por su nombre de usuario
-    async findByUsername(UserName: string): Promise<Users | undefined> {
+    async findByUsername(UserName: string, relations: string[] = []): Promise<Users | undefined> {
         try {
-            const user = await this.UsersRepository.findOne({ where: { UserName } });
+            const user = await this.UsersRepository.findOne({
+                where: { UserName: UserName },
+                relations: relations.length > 0 ? relations : undefined,  // Cargar las relaciones necesarias
+            });
             if (!user) {
                 console.warn(`No user found with username: ${UserName}`);
             }

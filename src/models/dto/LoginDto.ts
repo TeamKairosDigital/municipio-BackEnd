@@ -4,4 +4,5 @@ export class LoginDto {
     password: string;
     name: string;
     mombreMunicipio: string;
+    municipality_id: number;
 }
