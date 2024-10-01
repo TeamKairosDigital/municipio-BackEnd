@@ -25,6 +25,7 @@ export class AvisoPrivacidadController {
         };
     }
 
+
     @Post('createAvisoPrivacidad')
     async createAvisoPrivacidad(@Body() data: createAvisoPrivacidadDto): Promise<ApiResponse<any>> {
 
@@ -38,6 +39,21 @@ export class AvisoPrivacidadController {
         };
 
     }
+
+    @Get('getAvisoPrivacidad')
+    async getAvisoPrivacidad(@Param('id', ParseIntPipe) id: number, @Res() res): Promise<ApiResponse<void>> {
+
+        const result = await this.avisoPrivaciadService.getAvisoPrivacidad(id);
+
+        return {
+            success: true,
+            statusCode: HttpStatus.CREATED,
+            message: 'Aviso de privacidad creado correctamente',
+            data: result
+        }
+
+    }
+
 
     @Put('editAvisoPrivacidad')
     async editAvisoPrivacidad(@Body() data: createAvisoPrivacidadDto): Promise<ApiResponse<any>> {
@@ -69,7 +85,7 @@ export class AvisoPrivacidadController {
                 success: false,
                 statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
                 message: 'Error al eliminar documento y archivo',
-                errors: error.message,
+                errors: error,
             });
         }
 
@@ -87,6 +103,21 @@ export class AvisoPrivacidadController {
             message: 'Aviso de privacidad creado correctamente',
             data: result
         };
+
+    }
+
+
+    @Get('getAvisoPrivacidadArchivo')
+    async getAvisoPrivacidadArchivo(@Param('id', ParseIntPipe) id: number, @Res() res): Promise<ApiResponse<void>> {
+
+        const result = await this.avisoPrivaciadService.getAvisoPrivacidadArchivo(id);
+
+        return {
+            success: true,
+            statusCode: HttpStatus.CREATED,
+            message: 'Aviso de privacidad creado correctamente',
+            data: result
+        }
 
     }
 
@@ -121,7 +152,7 @@ export class AvisoPrivacidadController {
                 success: false,
                 statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
                 message: 'Error al eliminar documento y archivo',
-                errors: error.message,
+                errors: error,
             });
         }
 

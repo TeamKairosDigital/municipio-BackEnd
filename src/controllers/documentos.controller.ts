@@ -1,7 +1,7 @@
 import { Controller, Post, Body, Get, Query, UseInterceptors, NestInterceptor, UploadedFile, Param, ParseIntPipe, HttpStatus, Res, Delete } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express/multer';
 import { ApiResponse } from 'src/models/ApiResponse';
-import { createFileDto } from 'src/models/dto/create-file.dto';
+import { createFileDto } from 'src/models/dto/createFileDto';
 import { DocumentosFiltrosDto } from 'src/models/dto/DocumentosFiltrosDto';
 import { periodoDto } from 'src/models/dto/periodo';
 import { DocumentosService } from 'src/services/documentos.service';
@@ -77,7 +77,7 @@ export class DocumentosController {
                 success: false,
                 statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
                 message: 'Error al eliminar documento y archivo',
-                errors: error.message,
+                errors: error,
             });
         }
 

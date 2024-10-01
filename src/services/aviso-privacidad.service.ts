@@ -37,7 +37,7 @@ export class AvisoPrivacidadService {
             nombre: aviso.Nombre,
             activo: aviso.Activo,
             fechaCreacion: aviso.fechaCreacion,
-            archivos: aviso.avisoPrivacidadArchivos.map(archivo => ({
+            archivos: (aviso.avisoPrivacidadArchivos ?? []).map(archivo => ({
                 id: archivo.id,
                 nombreArchivo: archivo.NombreArchivo,
                 uuid: archivo.uuid,
@@ -61,6 +61,14 @@ export class AvisoPrivacidadService {
 
         return this.avisoPrivacidadRepository.save(newAvisoPrivacidad);
 
+    }
+
+    async getAvisoPrivacidad(id: number): Promise<any> {
+        const aviso = await this.avisoPrivacidadRepository.findOne({
+            where: { id }
+        });
+
+        return aviso;
     }
 
     // Editar aviso de privacidad
@@ -142,6 +150,14 @@ export class AvisoPrivacidadService {
 
         return this.avisoPrivacidadArchivo.save(newAvisoPrivacidadArchivo);
 
+    }
+
+    async getAvisoPrivacidadArchivo(id: number): Promise<any> {
+        const aviso = await this.avisoPrivacidadArchivo.findOne({
+            where: { id }
+        });
+
+        return aviso;
     }
 
     // Editar aviso de privacidad archivo

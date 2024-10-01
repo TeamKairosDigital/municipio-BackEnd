@@ -2,7 +2,7 @@ import { Injectable, InternalServerErrorException, NotFoundException } from '@ne
 import { InjectRepository } from '@nestjs/typeorm';
 import { Archivos } from 'src/models/archivos.entity';
 import { Documentos } from 'src/models/documentos.entity';
-import { createFileDto } from 'src/models/dto/create-file.dto';
+import { createFileDto } from 'src/models/dto/createFileDto';
 import { Connection, Repository } from 'typeorm';
 import { S3Service } from './s3.service';
 import { Periodos } from 'src/models/periodos.entity';
