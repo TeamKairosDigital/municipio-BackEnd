@@ -1,4 +1,4 @@
-import { Entity, Column, PrimaryGeneratedColumn, ManyToOne } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, JoinColumn } from 'typeorm';
 import { avisoPrivacidad } from './avisoPrivacidad.entity';
 
 @Entity()
@@ -13,15 +13,13 @@ export class avisoPrivacidadArchivos {
     uuid: string;
 
     @Column()
-    avisoPrivacidadId: number;
-
-    @Column()
     Activo: boolean;
 
     @Column()
     fechaCreacion: Date;
 
-    @ManyToOne(() => avisoPrivacidad, (aviso) => aviso.avisoPrivacidadArchivos)
+    @ManyToOne(() => avisoPrivacidad, (avisoPrivacidad) => avisoPrivacidad.avisoPrivacidadArchivos)
+    @JoinColumn({ name: 'avisoPrivacidadId' })
     avisoPrivacidad: avisoPrivacidad;
 
 }

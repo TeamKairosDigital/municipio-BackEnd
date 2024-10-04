@@ -40,8 +40,8 @@ export class AvisoPrivacidadController {
 
     }
 
-    @Get('getAvisoPrivacidad')
-    async getAvisoPrivacidad(@Param('id', ParseIntPipe) id: number, @Res() res): Promise<ApiResponse<void>> {
+    @Get('getAvisoPrivacidad/:id')
+    async getAvisoPrivacidad(@Param('id', ParseIntPipe) id: number): Promise<ApiResponse<void>> {
 
         const result = await this.avisoPrivaciadService.getAvisoPrivacidad(id);
 
@@ -50,9 +50,9 @@ export class AvisoPrivacidadController {
             statusCode: HttpStatus.CREATED,
             message: 'Aviso de privacidad creado correctamente',
             data: result
-        }
-
+        };
     }
+
 
 
     @Put('editAvisoPrivacidad')
@@ -70,26 +70,33 @@ export class AvisoPrivacidadController {
     }
 
 
-    @Delete('deleteAvisoPrivacidad:id')
-    async deleteDocument(@Param('id', ParseIntPipe) id: number, @Res() res): Promise<ApiResponse<void>> {
+    @Delete('deleteAvisoPrivacidad/:id')
+    async deleteDocument(@Param('id', ParseIntPipe) id: number): Promise<ApiResponse<void>> {
+
+        console.log('ID recibido para eliminar:', id); // Asegúrate de que estás recibiendo el ID correcto
 
         try {
             await this.avisoPrivaciadService.deleteAvisoPrivacidad(id);
-            return res.status(HttpStatus.OK).json({
+
+            return {
                 success: true,
                 statusCode: HttpStatus.OK,
-                message: 'Documento y archivo eliminados exitosamente',
-            });
+                message: 'Aviso de privacidad eliminado exitosamente',
+                data: null
+            };
+
         } catch (error) {
-            return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
+            console.error('Error al eliminar el aviso de privacidad:', error); // Log de error detallado
+            return {
                 success: false,
                 statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
-                message: 'Error al eliminar documento y archivo',
-                errors: error,
-            });
+                message: 'Error al eliminar aviso de privacidad y archivo: ' + error.message, // Cambié `error` a `error.message`
+                data: null
+            };
         }
 
     }
+
 
 
     @Post('createAvisoPrivacidadArchivo')
@@ -107,7 +114,7 @@ export class AvisoPrivacidadController {
     }
 
 
-    @Get('getAvisoPrivacidadArchivo')
+    @Get('getAvisoPrivacidadArchivo/:id')
     async getAvisoPrivacidadArchivo(@Param('id', ParseIntPipe) id: number, @Res() res): Promise<ApiResponse<void>> {
 
         const result = await this.avisoPrivaciadService.getAvisoPrivacidadArchivo(id);
@@ -137,7 +144,7 @@ export class AvisoPrivacidadController {
     }
 
 
-    @Delete('deleteAvisoPrivacidadArchivo:id')
+    @Delete('deleteAvisoPrivacidadArchivo/:id')
     async deleteAvisoPrivacidadArchivo(@Param('id', ParseIntPipe) id: number, @Res() res): Promise<ApiResponse<void>> {
 
         try {

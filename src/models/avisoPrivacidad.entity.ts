@@ -33,7 +33,8 @@ export class avisoPrivacidad {
     @JoinColumn({ name: 'municipality_id' })
     municipality: Municipality;
 
-    @OneToMany(() => avisoPrivacidadArchivos, (avisoPrivacidadArchivo) => avisoPrivacidadArchivo.avisoPrivacidadId)
+    @OneToMany(() => avisoPrivacidadArchivos, (avisoPrivacidadArchivo) => avisoPrivacidadArchivo.avisoPrivacidad)
     avisoPrivacidadArchivos: avisoPrivacidadArchivos[];
+
 
 }

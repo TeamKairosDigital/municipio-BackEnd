@@ -92,47 +92,107 @@ export class AvisoPrivacidadService {
     }
 
     // Eliminar aviso de privacidad
-    async deleteAvisoPrivacidad(id: number): Promise<void> {
-
+    async deleteAvisoPrivacidad(AvisoPrivacidadId: number): Promise<void> {
         const queryRunner = this.connection.createQueryRunner();
         await queryRunner.connect();
         await queryRunner.startTransaction();
 
         try {
-
-            // Paso 1: Buscar el aviso de privacidad
             const aviso = await this.avisoPrivacidadRepository.findOne({
-                where: { id },
-                relations: ['avisoPrivacidadArchivos'], // Incluir archivos relacionados
+                where: { id: AvisoPrivacidadId },
+                relations: ['avisoPrivacidadArchivos'],
             });
 
-            // Paso 2: Verificar si el aviso existe
             if (!aviso) {
-                throw new Error(`Aviso de privacidad con ID ${id} no encontrado`);
+                throw new Error(`Aviso de privacidad con ID ${AvisoPrivacidadId} no encontrado`);
             }
 
-            // Paso 3: Verificar si tiene archivos relacionados
             if (aviso.avisoPrivacidadArchivos && aviso.avisoPrivacidadArchivos.length > 0) {
-                throw new Error(`No se puede eliminar el aviso de privacidad con ID ${id} porque tiene archivos relacionados.`);
+                throw new Error(`No se puede eliminar el aviso de privacidad con ID ${AvisoPrivacidadId} porque tiene archivos relacionados.`);
             }
 
-            // Paso 4: Eliminar el aviso de privacidad
-            await this.avisoPrivacidadRepository.remove(aviso);
-
-            // Eliminar el archivo de S3
-            // await this.s3Service.deleteFile(fileName);
+            await queryRunner.manager.delete(avisoPrivacidad, AvisoPrivacidadId);
 
             await queryRunner.commitTransaction();
 
         } catch (error) {
+            console.error('Error en el servicio deleteAvisoPrivacidad:', error); // Log de error detallado
             await queryRunner.rollbackTransaction();
-            throw new InternalServerErrorException('Failed to delete document and file');
+            throw new InternalServerErrorException('Failed to delete aviso de privacidad');
         } finally {
             await queryRunner.release();
         }
-
-
     }
+    // async deleteAvisoPrivacidad(AvisoPrivacidadId: number): Promise<void> {
+
+    //     // const queryRunner = this.connection.createQueryRunner();
+    //     // await queryRunner.connect();
+    //     // await queryRunner.startTransaction();
+
+    //     // try {
+    //     //     // Paso 1: Buscar el aviso de privacidad junto con sus archivos
+    //     //     const aviso = await this.avisoPrivacidadRepository.findOne({
+    //     //         where: { id: AvisoPrivacidadId },
+    //     //         relations: ['avisoPrivacidadArchivos'], // Asegúrate de que la relación esté bien configurada
+    //     //     });
+
+    //     //     console.log('Aviso encontrado:', aviso);
+
+    //     //     // Paso 2: Verificar si el aviso existe
+    //     //     if (!aviso) {
+    //     //         throw new Error(`Aviso de privacidad con ID ${AvisoPrivacidadId} no encontrado`);
+    //     //     }
+
+    //     //     // Paso 3: Verificar si tiene archivos relacionados
+    //     //     if (aviso.avisoPrivacidadArchivos && aviso.avisoPrivacidadArchivos.length > 0) {
+    //     //         throw new Error(`No se puede eliminar el aviso de privacidad con ID ${AvisoPrivacidadId} porque tiene archivos relacionados.`);
+    //     //     }
+
+    //     //     // Paso 4: Eliminar el aviso de privacidad
+    //     //     await queryRunner.manager.delete(avisoPrivacidad, AvisoPrivacidadId);
+
+
+    //     //     // Si es necesario, eliminar manualmente los archivos de S3 aquí
+
+    //     //     await queryRunner.commitTransaction();
+
+    //     // } catch (error) {
+    //     //     await queryRunner.rollbackTransaction();
+    //     //     throw new InternalServerErrorException('Failed to delete aviso de privacidad');
+    //     // } finally {
+    //     //     await queryRunner.release();
+    //     // }
+
+    //     // try {
+    //     // Paso 1: Buscar el aviso de privacidad
+    //     const aviso = await this.avisoPrivacidadRepository.findOne({
+    //         where: { id: AvisoPrivacidadId },
+    //         relations: ['avisoPrivacidadArchivos'],
+    //     });
+
+    //     console.log('Aviso encontrado:', aviso);
+
+    //     // // Paso 2: Verificar si el aviso existe
+    //     // if (!aviso) {
+    //     //     throw new Error(`Aviso de privacidad con ID ${AvisoPrivacidadId} no encontrado`);
+    //     // }
+
+    //     // // Paso 3: Verificar si tiene archivos relacionados
+    //     // if (aviso.avisoPrivacidadArchivos && aviso.avisoPrivacidadArchivos.length > 0) {
+    //     //     throw new Error(`No se puede eliminar el aviso de privacidad con ID ${AvisoPrivacidadId} porque tiene archivos relacionados.`);
+    //     // }
+
+    //     // // Paso 4: Eliminar el aviso de privacidad usando delete (más seguro que remove si solo tienes el ID)
+    //     // await this.avisoPrivacidadRepository.delete(AvisoPrivacidadId);
+
+    //     // Si tienes algún archivo en S3 para eliminar, puedes manejarlo aquí
+    //     // await this.s3Service.deleteFile(fileName);
+    //     // } catch (error) {
+    //     //     throw new InternalServerErrorException('Failed to delete aviso de privacidad');
+    //     // }
+    // }
+
+
 
     // Crear aviso de privacidad archivo
     async createAvisoPrivacidadArchivo(data: createAvisoPrivacidadArchivoDto) {
@@ -143,7 +203,7 @@ export class AvisoPrivacidadService {
         const newAvisoPrivacidadArchivo = this.avisoPrivacidadArchivo.create({
             NombreArchivo: data.nombreArchivo,
             uuid: uniqueId,
-            avisoPrivacidadId: data.avisoPrivacidadId,
+            // avisoPrivacidad: data.avisoPrivacidadId,
             Activo: true,
             fechaCreacion: new Date()
         });
