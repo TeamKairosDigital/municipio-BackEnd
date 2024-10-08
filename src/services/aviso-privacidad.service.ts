@@ -7,6 +7,8 @@ import { createAvisoPrivacidadDto } from 'src/models/dto/createAvisoPrivacidadDt
 import { filterAvisoPrivacidadDto } from 'src/models/dto/filterAvisoPrivacidadDto';
 import { Connection, Repository } from 'typeorm';
 import { v4 as uuidv4 } from 'uuid';
+import * as fs from 'fs';
+import * as path from 'path';
 import { S3Service } from './s3.service';
 
 @Injectable()
@@ -123,92 +125,47 @@ export class AvisoPrivacidadService {
             await queryRunner.release();
         }
     }
-    // async deleteAvisoPrivacidad(AvisoPrivacidadId: number): Promise<void> {
-
-    //     // const queryRunner = this.connection.createQueryRunner();
-    //     // await queryRunner.connect();
-    //     // await queryRunner.startTransaction();
-
-    //     // try {
-    //     //     // Paso 1: Buscar el aviso de privacidad junto con sus archivos
-    //     //     const aviso = await this.avisoPrivacidadRepository.findOne({
-    //     //         where: { id: AvisoPrivacidadId },
-    //     //         relations: ['avisoPrivacidadArchivos'], // Asegúrate de que la relación esté bien configurada
-    //     //     });
-
-    //     //     console.log('Aviso encontrado:', aviso);
-
-    //     //     // Paso 2: Verificar si el aviso existe
-    //     //     if (!aviso) {
-    //     //         throw new Error(`Aviso de privacidad con ID ${AvisoPrivacidadId} no encontrado`);
-    //     //     }
-
-    //     //     // Paso 3: Verificar si tiene archivos relacionados
-    //     //     if (aviso.avisoPrivacidadArchivos && aviso.avisoPrivacidadArchivos.length > 0) {
-    //     //         throw new Error(`No se puede eliminar el aviso de privacidad con ID ${AvisoPrivacidadId} porque tiene archivos relacionados.`);
-    //     //     }
-
-    //     //     // Paso 4: Eliminar el aviso de privacidad
-    //     //     await queryRunner.manager.delete(avisoPrivacidad, AvisoPrivacidadId);
-
-
-    //     //     // Si es necesario, eliminar manualmente los archivos de S3 aquí
-
-    //     //     await queryRunner.commitTransaction();
-
-    //     // } catch (error) {
-    //     //     await queryRunner.rollbackTransaction();
-    //     //     throw new InternalServerErrorException('Failed to delete aviso de privacidad');
-    //     // } finally {
-    //     //     await queryRunner.release();
-    //     // }
-
-    //     // try {
-    //     // Paso 1: Buscar el aviso de privacidad
-    //     const aviso = await this.avisoPrivacidadRepository.findOne({
-    //         where: { id: AvisoPrivacidadId },
-    //         relations: ['avisoPrivacidadArchivos'],
-    //     });
-
-    //     console.log('Aviso encontrado:', aviso);
-
-    //     // // Paso 2: Verificar si el aviso existe
-    //     // if (!aviso) {
-    //     //     throw new Error(`Aviso de privacidad con ID ${AvisoPrivacidadId} no encontrado`);
-    //     // }
-
-    //     // // Paso 3: Verificar si tiene archivos relacionados
-    //     // if (aviso.avisoPrivacidadArchivos && aviso.avisoPrivacidadArchivos.length > 0) {
-    //     //     throw new Error(`No se puede eliminar el aviso de privacidad con ID ${AvisoPrivacidadId} porque tiene archivos relacionados.`);
-    //     // }
-
-    //     // // Paso 4: Eliminar el aviso de privacidad usando delete (más seguro que remove si solo tienes el ID)
-    //     // await this.avisoPrivacidadRepository.delete(AvisoPrivacidadId);
-
-    //     // Si tienes algún archivo en S3 para eliminar, puedes manejarlo aquí
-    //     // await this.s3Service.deleteFile(fileName);
-    //     // } catch (error) {
-    //     //     throw new InternalServerErrorException('Failed to delete aviso de privacidad');
-    //     // }
-    // }
-
 
 
     // Crear aviso de privacidad archivo
-    async createAvisoPrivacidadArchivo(data: createAvisoPrivacidadArchivoDto) {
+    async createAvisoPrivacidadArchivo(data: createAvisoPrivacidadArchivoDto, file: Express.Multer.File) {
 
-        // Generar un ID único
-        const uniqueId = uuidv4();
+        try {
+            // Generar un ID único
+            const uniqueId = uuidv4();
 
-        const newAvisoPrivacidadArchivo = this.avisoPrivacidadArchivo.create({
-            NombreArchivo: data.nombreArchivo,
-            uuid: uniqueId,
-            // avisoPrivacidad: data.avisoPrivacidadId,
-            Activo: true,
-            fechaCreacion: new Date()
-        });
+            // // Definir ruta para guardar el archivo
+            // // Quitar la barra inicial para evitar que se interprete como ruta absoluta
+            // const uploadDir = path.join(__dirname, '..', 'uploads');
 
-        return this.avisoPrivacidadArchivo.save(newAvisoPrivacidadArchivo);
+            // // Asegúrate de que la carpeta existe, si no, crearla
+            // if (!fs.existsSync(uploadDir)) {
+            //     fs.mkdirSync(uploadDir, { recursive: true });
+            // }
+
+            // Nombre único para el archivo con su extensión original
+            const uniqueFileName = `${uniqueId}_${file.originalname}`;
+            // const filePath = path.join(uploadDir, uniqueFileName);
+
+            // // Guardar el archivo en la carpeta 'uploads'
+            // fs.writeFileSync(filePath, file.buffer);
+
+            //Subir archivo al S3
+            // await this.s3Service.uploadFile(file, uniqueFileName);
+
+            const newAvisoPrivacidadArchivo = this.avisoPrivacidadArchivo.create({
+                NombreArchivo: uniqueFileName,
+                uuid: uniqueId,
+                avisoPrivacidad: { id: data.avisoPrivacidadId },
+                Activo: true,
+                fechaCreacion: new Date(),
+            });
+
+            return await this.avisoPrivacidadArchivo.save(newAvisoPrivacidadArchivo);
+        } catch (error) {
+            console.error('Error guardando el archivo:', error); // Log para detectar errores
+            throw new Error('Error al guardar el archivo.');
+        }
 
     }
 

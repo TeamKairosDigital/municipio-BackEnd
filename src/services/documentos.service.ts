@@ -78,7 +78,7 @@ export class DocumentosService {
         const uniqueId = uuidv4();
 
         // Crear un nombre de archivo único concatenando el ID con el nombre original
-        const uniqueFileName = `${uniqueId}-${file.originalname}`;
+        const uniqueFileName = `${uniqueId}_${file.originalname}`;
 
         // Subir el archivo a S3
         await this.s3Service.uploadFile(file, uniqueFileName);

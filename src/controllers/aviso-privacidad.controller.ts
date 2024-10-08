@@ -1,4 +1,5 @@
-import { Body, Controller, Delete, Get, HttpStatus, Param, ParseIntPipe, Post, Put, Res } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpStatus, Param, ParseIntPipe, Post, Put, Res, UploadedFile, UseInterceptors } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiResponse } from 'src/models/ApiResponse';
 import { createAvisoPrivacidadArchivoDto } from 'src/models/dto/createAvisoPrivacidadArchivoDto';
 import { createAvisoPrivacidadDto } from 'src/models/dto/createAvisoPrivacidadDto';
@@ -73,8 +74,6 @@ export class AvisoPrivacidadController {
     @Delete('deleteAvisoPrivacidad/:id')
     async deleteDocument(@Param('id', ParseIntPipe) id: number): Promise<ApiResponse<void>> {
 
-        console.log('ID recibido para eliminar:', id); // Asegúrate de que estás recibiendo el ID correcto
-
         try {
             await this.avisoPrivaciadService.deleteAvisoPrivacidad(id);
 
@@ -100,9 +99,13 @@ export class AvisoPrivacidadController {
 
 
     @Post('createAvisoPrivacidadArchivo')
-    async createAvisoPrivacidadArchivo(@Body() data: createAvisoPrivacidadArchivoDto): Promise<ApiResponse<any>> {
+    @UseInterceptors(FileInterceptor('archivo'))
+    async createAvisoPrivacidadArchivo(
+        @Body() data: createAvisoPrivacidadArchivoDto,
+        @UploadedFile() file: Express.Multer.File
+    ): Promise<ApiResponse<any>> {
 
-        const result = await this.avisoPrivaciadService.createAvisoPrivacidadArchivo(data);
+        const result = await this.avisoPrivaciadService.createAvisoPrivacidadArchivo(data, file);
 
         return {
             success: true,
