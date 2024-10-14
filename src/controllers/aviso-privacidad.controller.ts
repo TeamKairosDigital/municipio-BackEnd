@@ -118,7 +118,7 @@ export class AvisoPrivacidadController {
 
 
     @Get('getAvisoPrivacidadArchivo/:id')
-    async getAvisoPrivacidadArchivo(@Param('id', ParseIntPipe) id: number, @Res() res): Promise<ApiResponse<void>> {
+    async getAvisoPrivacidadArchivo(@Param('id', ParseIntPipe) id: number): Promise<ApiResponse<void>> {
 
         const result = await this.avisoPrivaciadService.getAvisoPrivacidadArchivo(id);
 
@@ -133,9 +133,13 @@ export class AvisoPrivacidadController {
 
 
     @Put('editAvisoPrivacidadArchivo')
-    async editAvisoPrivacidadArchivo(@Body() data: createAvisoPrivacidadArchivoDto): Promise<ApiResponse<any>> {
+    @UseInterceptors(FileInterceptor('archivo'))
+    async editAvisoPrivacidadArchivo(
+        @Body() data: createAvisoPrivacidadArchivoDto,
+        @UploadedFile() file: Express.Multer.File
+    ): Promise<ApiResponse<any>> {
 
-        const result = await this.avisoPrivaciadService.editAvisoPrivacidadArchivo(data);
+        const result = await this.avisoPrivaciadService.editAvisoPrivacidadArchivo(data, file);
 
         return {
             success: true,

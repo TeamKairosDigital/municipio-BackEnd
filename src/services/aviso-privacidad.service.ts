@@ -30,6 +30,7 @@ export class AvisoPrivacidadService {
 
         // Paso 1: Obtener todos los avisos de privacidad
         const avisos = await this.avisoPrivacidadRepository.find({ // Relacionar las entidades necesarias
+            relations: ['avisoPrivacidadArchivos'],
             order: { id: 'ASC' } // Ordenar por el campo que desees
         });
 
@@ -38,13 +39,27 @@ export class AvisoPrivacidadService {
             id: aviso.id,
             nombre: aviso.Nombre,
             activo: aviso.Activo,
-            fechaCreacion: aviso.fechaCreacion,
+            fechaCreacion: new Date(aviso.fechaCreacion).toLocaleString('es-ES', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+            }),
             archivos: (aviso.avisoPrivacidadArchivos ?? []).map(archivo => ({
                 id: archivo.id,
                 nombreArchivo: archivo.NombreArchivo,
                 uuid: archivo.uuid,
                 activo: archivo.Activo,
-                fechaCreacion: archivo.fechaCreacion,
+                fechaCreacion: new Date(archivo.fechaCreacion).toLocaleString('es-ES', {
+                    year: 'numeric',
+                    month: '2-digit',
+                    day: '2-digit',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    second: '2-digit',
+                }),
             }))
         }));
 
@@ -154,7 +169,7 @@ export class AvisoPrivacidadService {
             // await this.s3Service.uploadFile(file, uniqueFileName);
 
             const newAvisoPrivacidadArchivo = this.avisoPrivacidadArchivo.create({
-                NombreArchivo: uniqueFileName,
+                NombreArchivo: data.nombreArchivo,
                 uuid: uniqueId,
                 avisoPrivacidad: { id: data.avisoPrivacidadId },
                 Activo: true,
@@ -170,6 +185,7 @@ export class AvisoPrivacidadService {
     }
 
     async getAvisoPrivacidadArchivo(id: number): Promise<any> {
+
         const aviso = await this.avisoPrivacidadArchivo.findOne({
             where: { id }
         });
@@ -178,7 +194,7 @@ export class AvisoPrivacidadService {
     }
 
     // Editar aviso de privacidad archivo
-    async editAvisoPrivacidadArchivo(data: createAvisoPrivacidadArchivoDto) {
+    async editAvisoPrivacidadArchivo(data: createAvisoPrivacidadArchivoDto, file: Express.Multer.File = null) {
 
         const id = data.id;
 
@@ -190,9 +206,14 @@ export class AvisoPrivacidadService {
             throw new Error(`Aviso de privacidad con ID ${data.id} no encontrado`);
         }
 
+        // UPDATE AL S3
+        // if(file){
+            
+        // }
+
         // Paso 3: Actualizar los campos necesarios
         aviso.NombreArchivo = data.nombreArchivo;
-        aviso.uuid = data.uuid;
+        // aviso.uuid = data.uuid;
 
         // Paso 4: Guardar los cambios en la base de datos
         return this.avisoPrivacidadRepository.save(aviso);
@@ -213,6 +234,39 @@ export class AvisoPrivacidadService {
 
         // Paso 3: Eliminar el aviso de privacidad
         await this.avisoPrivacidadArchivo.remove(aviso);
+
+
+
+        // const queryRunner = this.connection.createQueryRunner();
+        // await queryRunner.connect();
+        // await queryRunner.startTransaction();
+
+        // try {
+        //     const aviso = await this.avisoPrivacidadRepository.findOne({
+        //         where: { id: AvisoPrivacidadId },
+        //         relations: ['avisoPrivacidadArchivos'],
+        //     });
+
+        //     if (!aviso) {
+        //         throw new Error(`Aviso de privacidad con ID ${AvisoPrivacidadId} no encontrado`);
+        //     }
+
+        //     if (aviso.avisoPrivacidadArchivos && aviso.avisoPrivacidadArchivos.length > 0) {
+        //         throw new Error(`No se puede eliminar el aviso de privacidad con ID ${AvisoPrivacidadId} porque tiene archivos relacionados.`);
+        //     }
+
+        //     await queryRunner.manager.delete(avisoPrivacidad, AvisoPrivacidadId);
+
+        //     await queryRunner.commitTransaction();
+
+        // } catch (error) {
+        //     console.error('Error en el servicio deleteAvisoPrivacidad:', error); // Log de error detallado
+        //     await queryRunner.rollbackTransaction();
+        //     throw new InternalServerErrorException('Failed to delete aviso de privacidad');
+        // } finally {
+        //     await queryRunner.release();
+        // }
+
     }
 
 }
