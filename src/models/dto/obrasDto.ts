@@ -1,4 +1,4 @@
-export class CreateBlogDto {
+export class CreateObrasDto {
     nombre: string;
     descripcion: string;
     foto?: string;

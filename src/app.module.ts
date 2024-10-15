@@ -21,6 +21,9 @@ import { avisoPrivacidad } from './models/avisoPrivacidad.entity';
 import { avisoPrivacidadArchivos } from './models/avisoPrivacidadArchivos.entity';
 import { AvisoPrivacidadController } from './controllers/aviso-privacidad.controller';
 import { AvisoPrivacidadService } from './services/aviso-privacidad.service';
+import { ObrasService } from './services/obras.service';
+import { ObrasController } from './controllers/obras.controller';
+import { Obras } from './models/obras.entity';
 
 @Module({
   imports: [
@@ -42,12 +45,12 @@ import { AvisoPrivacidadService } from './services/aviso-privacidad.service';
       isGlobal: true, // Esto hace que ConfigService esté disponible globalmente
       // envFilePath: __dirname + '../../../.env',
     }),
-    TypeOrmModule.forFeature([Documentos, Archivos, Periodos, Users, Municipality, avisoPrivacidad, avisoPrivacidadArchivos]),
+    TypeOrmModule.forFeature([Documentos, Archivos, Periodos, Users, Municipality, avisoPrivacidad, avisoPrivacidadArchivos, Obras]),
     S3Module,
     AuthModule,
     UserModule,
   ],
-  controllers: [DocumentosController, S3Controller, AuthController, AvisoPrivacidadController],
-  providers: [DocumentosService, S3Service, AuthService, UserService, JwtService, AvisoPrivacidadService],
+  controllers: [DocumentosController, S3Controller, AuthController, AvisoPrivacidadController, ObrasController],
+  providers: [DocumentosService, S3Service, AuthService, UserService, JwtService, AvisoPrivacidadService, ObrasService],
 })
 export class AppModule { }
