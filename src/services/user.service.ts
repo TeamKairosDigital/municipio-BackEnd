@@ -29,7 +29,7 @@ export class UserService {
     }
 
     // async findById(userId: number): Promise<any> {
-    //     return this.usersMunicipalityRepository.find(user => user.Id === userId);
+    //     return this.UsersRepository.find(user => user.id === userId);
     // }
 
 }

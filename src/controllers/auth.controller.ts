@@ -1,5 +1,7 @@
 import { Body, Controller, Post, UnauthorizedException } from '@nestjs/common';
+import { ApiResponse } from 'src/models/ApiResponse';
 import { LoginDto } from 'src/models/dto/LoginDto';
+import { UserDataDto } from 'src/models/dto/UserDataDto';
 import { AuthService } from 'src/services/auth.service';
 
 @Controller('auth')
@@ -10,20 +12,8 @@ export class AuthController {
     ) { }
 
     @Post('login')
-    async login(@Body() loginDto: LoginDto): Promise<any> {
-        const user = await this.authService.validateUser(loginDto.username, loginDto.password);
-
-        if (!user) {
-            throw new UnauthorizedException('Invalid credentials');
-        }
-
-        // Generar token o similar
-        const token = this.authService.generateJwtToken(user.id);
-
-        return {
-            user,
-            token
-        };
+    async login(@Body() loginDto: LoginDto): Promise<ApiResponse<UserDataDto>> {
+        return await this.authService.validateUser(loginDto.username, loginDto.password);
     }
 
 }
