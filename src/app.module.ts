@@ -7,7 +7,7 @@ import { Archivos } from './models/archivos.entity';
 import { S3Module } from './modulos/s3/s3.module';
 import { S3Service } from './services/s3.service';
 import { S3Controller } from './controllers/s3.controller';
-import { ConfigModule } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { Periodos } from './models/periodos.entity';
 import { AuthController } from './controllers/auth.controller';
 import { AuthService } from './services/auth.service';
@@ -27,24 +27,38 @@ import { Obras } from './models/obras.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forRoot({
-      type: 'mysql',
-      host: 'localhost',
-      port: 3306,
-      username: 'soporte',
-      password: '12345',
-      database: 'almacenArchivos',
-      entities: [__dirname + '/**/*.entity{.ts,.js}'],
-      synchronize: false, // Esto se utiliza si no esta creado las tablas
+    ConfigModule.forRoot({
+      isGlobal: true, // Esto hace que ConfigService esté disponible globalmente
+      envFilePath: '.env',
+      // envFilePath: __dirname + '../../../.env',
+    }),
+
+    TypeOrmModule.forRootAsync({
+      imports: [ConfigModule],
+      useFactory: (configService: ConfigService) => ({
+        type: 'mysql',
+        host: configService.get<string>('DB_HOST'),
+        port: configService.get<number>('DB_PORT'),
+        username: configService.get<string>('DB_USER'),
+        password: configService.get<string>('DB_PASSWORD'),
+        database: configService.get<string>('DB_NAME'),
+        entities: [__dirname + '/**/*.entity{.ts,.js}'],
+        synchronize: false,
+      }),
+      inject: [ConfigService],
+      // host: 'localhost',
+      // port: 3306,
+      // username: 'soporte',
+      // password: '12345',
+      // database: 'almacenArchivos',
+      // entities: [__dirname + '/**/*.entity{.ts,.js}'],
+      // synchronize: false, // Esto se utiliza si no esta creado las tablas
       // extra: {
       //   trustServerCertificate: true, // en prod habra que ponerlo en false
       // },
       // logging: true
     }),
-    ConfigModule.forRoot({
-      isGlobal: true, // Esto hace que ConfigService esté disponible globalmente
-      // envFilePath: __dirname + '../../../.env',
-    }),
+
     TypeOrmModule.forFeature([Documentos, Archivos, Periodos, Users, Municipality, avisoPrivacidad, avisoPrivacidadArchivos, Obras]),
     S3Module,
     AuthModule,

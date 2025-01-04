@@ -63,9 +63,6 @@ export class AuthService {
         userDataDto.mombreMunicipio = user.municipality?.NombreMunicipio || null;
         userDataDto.municipality_id = user.municipality?.id || null;
     
-        // Generar el JWT
-        // const payload = { username: userDataDto.username, sub: userDataDto.id };
-        // userDataDto.access_token = this.jwtService.sign(payload); // Usamos JwtService aquí
 
         const token = await this.generateJwtToken(userDataDto.id);
         userDataDto.access_token = token;
@@ -75,6 +72,17 @@ export class AuthService {
         response.data = userDataDto;
     
         return response;
+    }
+
+    async generateJwtToken(userId: number): Promise<string> {
+        const secret = this.configService.get<string>('JWT_SECRET');
+        return this.jwtService.signAsync(
+            { userId }, 
+            {
+                secret: secret,
+                expiresIn: '1h', // Token válido por 1 hora
+            }
+        );
     }
 
     // Generar token o similar
@@ -90,10 +98,7 @@ export class AuthService {
     //     return this.jwtService.sign(payload); // Aquí generas el JWT
     // }
 
-    async generateJwtToken(userId: number): Promise<string> {
-        const secret = this.configService.get<string>('JWT_SECRET');
-        return this.jwtService.signAsync({ userId }, { secret: secret });
-    }
+
 
 
 
