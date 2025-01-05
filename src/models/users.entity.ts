@@ -2,6 +2,7 @@ import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, OneToMany, JoinColum
 import { Archivos } from './archivos.entity';
 import { avisoPrivacidad } from './avisoPrivacidad.entity';
 import { Municipality } from './Municipality.entity';
+import { Obras } from './obras.entity';
 
 @Entity()
 export class Users {
@@ -39,5 +40,9 @@ export class Users {
     @ManyToOne(() => Municipality, (municipality) => municipality.users)
     @JoinColumn({ name: 'municipality_id' })
     municipality: Municipality;
+
+    // Relación con la entidad Obras
+    @OneToMany(() => Obras, (obra) => obra.municipality)
+    obras: Obras[];
 
 }

@@ -2,6 +2,8 @@ import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, OneToMany } from 'ty
 import { Users } from './users.entity';
 import { Archivos } from './archivos.entity';
 import { avisoPrivacidad } from './avisoPrivacidad.entity';
+import { Obras } from './obras.entity';
+import { FileesEntity } from './filees.entity';
 
 @Entity()
 export class Municipality {
@@ -30,4 +32,11 @@ export class Municipality {
     @OneToMany(() => avisoPrivacidad, (aviso) => aviso.user)
     avisoPrivacidad: avisoPrivacidad[];
 
+    // Relación con la entidad Obras
+    @OneToMany(() => Obras, (obra) => obra.municipality)
+    obras: Obras[];
+
+    // Relación con la entidad Obras
+    @OneToMany(() => FileesEntity, (file) => file.municipality)
+    files: FileesEntity[];
 }

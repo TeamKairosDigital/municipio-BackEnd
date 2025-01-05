@@ -1,4 +1,6 @@
-import { Entity, Column, PrimaryGeneratedColumn } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, JoinColumn } from 'typeorm';
+import { Municipality } from './Municipality.entity';
+import { Users } from './users.entity';
 
 @Entity('obras')
 export class Obras {
@@ -19,5 +21,16 @@ export class Obras {
 
   @Column()
   fechaCreacion: Date;
+
+  // Relación con la entidad Municipality
+  @ManyToOne(() => Municipality, (municipality) => municipality.obras)
+  @JoinColumn({ name: 'municipality_id' })
+  municipality: Municipality;
+
+  // Relación con la entidad Users
+  @ManyToOne(() => Users, (User) => User.archivos)
+  @JoinColumn({ name: 'UsuarioCreacionId' })
+  user: Users;
+
 
 }
