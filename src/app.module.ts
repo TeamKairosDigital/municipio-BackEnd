@@ -44,19 +44,12 @@ import { Obras } from './models/obras.entity';
         database: configService.get<string>('DB_NAME'),
         entities: [__dirname + '/**/*.entity{.ts,.js}'],
         synchronize: false,
+        extra: {
+          trustServerCertificate: false,
+        },
       }),
       inject: [ConfigService],
-      // host: 'localhost',
-      // port: 3306,
-      // username: 'soporte',
-      // password: '12345',
-      // database: 'almacenArchivos',
-      // entities: [__dirname + '/**/*.entity{.ts,.js}'],
-      // synchronize: false, // Esto se utiliza si no esta creado las tablas
-      // extra: {
-      //   trustServerCertificate: true, // en prod habra que ponerlo en false
-      // },
-      // logging: true
+
     }),
 
     TypeOrmModule.forFeature([Documentos, Archivos, Periodos, Users, Municipality, avisoPrivacidad, avisoPrivacidadArchivos, Obras]),
