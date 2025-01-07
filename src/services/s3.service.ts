@@ -18,7 +18,6 @@ export class S3Service {
         private archivosRepository: Repository<Archivos>,
     ) {
         this.client = new S3Client({
-            // region: this.configService.get<string>('AWS_BUCKET_REGION'),
             endpoint: this.configService.get<string>('AWS_BUCKET_REGION'),  // Usamos el endpoint de DigitalOcean
             region: 'us-east-1',
             credentials: {
