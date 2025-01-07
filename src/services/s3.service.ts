@@ -18,7 +18,9 @@ export class S3Service {
         private archivosRepository: Repository<Archivos>,
     ) {
         this.client = new S3Client({
-            region: this.configService.get<string>('AWS_BUCKET_REGION'),
+            // region: this.configService.get<string>('AWS_BUCKET_REGION'),
+            endpoint: this.configService.get<string>('AWS_BUCKET_REGION'),  // Usamos el endpoint de DigitalOcean
+            region: 'us-east-1',
             credentials: {
                 accessKeyId: this.configService.get<string>('AWS_PUBLIC_KEY'),
                 secretAccessKey: this.configService.get<string>('AWS_SECRET_KEY'),
