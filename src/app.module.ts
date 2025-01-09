@@ -1,36 +1,19 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { DocumentosController } from './controllers/documentos.controller';
-import { DocumentosService } from './services/documentos.service';
-import { Documentos } from './models/documentos.entity';
-import { Archivos } from './models/archivos.entity';
-import { S3Module } from './modulos/s3/s3.module';
-import { S3Service } from './services/s3.service';
-import { S3Controller } from './controllers/s3.controller';
+import { S3Module } from './s3/s3.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { Periodos } from './models/periodos.entity';
-import { AuthController } from './controllers/auth.controller';
-import { AuthService } from './services/auth.service';
-import { UserService } from './services/user.service';
-import { AuthModule } from './modulos/auth/auth.module';
-import { UserModule } from './modulos/user/user.module';
+import { AuthModule } from './auth/auth.module';
+import { UserModule } from './users/user.module';
 import { JwtService } from '@nestjs/jwt';
-import { Users } from './models/users.entity';
-import { Municipality } from './models/Municipality.entity';
-import { avisoPrivacidad } from './models/avisoPrivacidad.entity';
-import { avisoPrivacidadArchivos } from './models/avisoPrivacidadArchivos.entity';
-import { AvisoPrivacidadController } from './controllers/aviso-privacidad.controller';
-import { AvisoPrivacidadService } from './services/aviso-privacidad.service';
-import { ObrasService } from './services/obras.service';
-import { ObrasController } from './controllers/obras.controller';
-import { Obras } from './models/obras.entity';
+import { AvisoPrivacidadModule } from './aviso-privacidad/aviso-privacidad.module';
+import { ObrasModule } from './obras/obras.module';
+import { DocumentosModule } from './documentos/documentos.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true, // Esto hace que ConfigService esté disponible globalmente
       envFilePath: '.env',
-      // envFilePath: __dirname + '../../../.env',
     }),
 
     TypeOrmModule.forRootAsync({
@@ -46,15 +29,16 @@ import { Obras } from './models/obras.entity';
         synchronize: false, // Desactivar sincronización en producción
       }),
       inject: [ConfigService],
-
     }),
 
-    TypeOrmModule.forFeature([Documentos, Archivos, Periodos, Users, Municipality, avisoPrivacidad, avisoPrivacidadArchivos, Obras]),
-    S3Module,
     AuthModule,
-    UserModule,
+    AvisoPrivacidadModule,
+    DocumentosModule,
+    ObrasModule,
+    S3Module,
+    UserModule
   ],
-  controllers: [DocumentosController, S3Controller, AuthController, AvisoPrivacidadController, ObrasController],
-  providers: [DocumentosService, S3Service, AuthService, UserService, JwtService, AvisoPrivacidadService, ObrasService],
+  controllers: [],
+  providers: [JwtService],
 })
 export class AppModule { }

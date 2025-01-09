@@ -2,6 +2,7 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import * as dotenv from 'dotenv';
 import { AllExceptionsFilter } from './common/all-exceptions';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 
 dotenv.config();
 
@@ -12,6 +13,7 @@ async function bootstrap() {
   const allowedOrigins = [
     'http://localhost:4200',
     'https://larrainzar-front-nhil2.ondigitalocean.app',
+    'http://localhost:3000/api'
   ];
 
   // Habilitar CORS
@@ -29,8 +31,18 @@ async function bootstrap() {
 
   // Registro global del filtro
   app.useGlobalFilters(new AllExceptionsFilter());
+
+  // Configuración de Swagger
+  const config = new DocumentBuilder()
+  .setTitle('Municipio API')
+  .setDescription('Servicios API de municipios')
+  .setVersion('1.0')
+  .addBearerAuth()
+  .build();
+  const documentFactory = () => SwaggerModule.createDocument(app, config);
+  SwaggerModule.setup('api', app, documentFactory);
   
-  await app.listen(3000);
+  await app.listen(parseInt(process.env.PORT) || 3000);
 }
 
 bootstrap();
