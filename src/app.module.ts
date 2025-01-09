@@ -44,9 +44,6 @@ import { Obras } from './models/obras.entity';
         database: configService.get<string>('DB_NAME'),
         entities: [__dirname + '/**/*.entity{.ts,.js}'],
         synchronize: false, // Desactivar sincronización en producción
-        // extra: {
-        //   trustServerCertificate: false,
-        // },
       }),
       inject: [ConfigService],
 

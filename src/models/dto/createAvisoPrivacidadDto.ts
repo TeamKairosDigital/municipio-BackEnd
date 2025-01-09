@@ -1,6 +1,6 @@
 export class createAvisoPrivacidadDto {
     id?: number;
     nombreAvisoPrivacidad: string;
-    usuarioId: number;
+    usuarioCreacionId: number;
     municipality_id: number;
 }

@@ -1,6 +1,7 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import * as dotenv from 'dotenv';
+import { AllExceptionsFilter } from './common/all-exceptions';
 
 dotenv.config();
 
@@ -26,6 +27,9 @@ async function bootstrap() {
     credentials: true,
   });
 
+  // Registro global del filtro
+  app.useGlobalFilters(new AllExceptionsFilter());
+  
   await app.listen(3000);
 }
 

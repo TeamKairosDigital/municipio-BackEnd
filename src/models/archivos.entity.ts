@@ -27,6 +27,12 @@ export class Archivos {
     @Column()
     fechaCreacion: Date;
 
+    @Column()
+    UsuarioCreacionId: number;
+
+    @Column()
+    municipality_id: number;
+
     // Relación con la entidad Documentos
     @ManyToOne(() => Documentos, (documento) => documento.archivos)
     documento: Documentos;

@@ -7,4 +7,6 @@ export class createFileDto {
     activo: boolean;
     fechaCreacion: Date;
     archivo: any;
+    municipality_id: number;
+    usuarioCreacionId: number;
 }
