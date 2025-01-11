@@ -1,8 +1,10 @@
 export class createAvisoPrivacidadArchivoDto {
     id?: number;
     nombreArchivo: string;
-    uuid: string;
-    avisoPrivacidadId: number;
+    nombreArchivoOriginal?: string;
+    uuid?: string;
+    url: string;
+    avisoPrivacidadId?: number;
     Activo: boolean;
     fechaCreacion: Date;
 }

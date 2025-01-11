@@ -10,7 +10,12 @@
             "outFiles": [
                 "${workspaceFolder}/dist/**/*.js"
             ],
-            "sourceMaps": true
+            "internalConsoleOptions": "openOnSessionStart",
+            "sourceMaps": true,
+            "port": 9229, 
+            "restart": true,
+            "runtimeExecutable": "npm",
+            "runtimeArgs": ["run", "start:debug"],
         }
     ]
 }

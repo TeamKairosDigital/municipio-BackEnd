@@ -50,8 +50,8 @@ export class AvisoPrivacidadService {
             }),
             archivos: (aviso.avisoPrivacidadArchivos ?? []).map((archivo) => ({
               id: archivo.id,
-              nombreArchivo: archivo.NombreArchivo,
-              uuid: archivo.uuid,
+              nombreArchivo: archivo.nombreArchivo,
+              nombre: archivo.nombre,
               activo: archivo.Activo,
               fechaCreacion: new Date(archivo.fechaCreacion).toLocaleString('es-ES', {
                 year: 'numeric',
@@ -106,7 +106,7 @@ export class AvisoPrivacidadService {
         const aviso = await this.avisoPrivacidadRepository.findOne({ where: { id: data.id } });
 
         if (!aviso) {
-        throw new NotFoundException(`Aviso de privacidad con ID ${data.id} no encontrado`);
+          throw new NotFoundException(`Aviso de privacidad con ID ${data.id} no encontrado`);
         }
 
         aviso.Nombre = data.nombreAvisoPrivacidad;
@@ -130,7 +130,7 @@ export class AvisoPrivacidadService {
         });
 
         if (!aviso) {
-        throw new NotFoundException(`Aviso de privacidad con ID ${AvisoPrivacidadId} no encontrado`);
+          throw new NotFoundException(`Aviso de privacidad con ID ${AvisoPrivacidadId} no encontrado`);
         }
 
         if (aviso.avisoPrivacidadArchivos.length > 0) {
@@ -151,17 +151,24 @@ export class AvisoPrivacidadService {
 
   async createAvisoPrivacidadArchivo(data: createAvisoPrivacidadArchivoDto, file: Express.Multer.File) {
     try {
-        const uniqueId = uuidv4();
-        const uniqueFileName = `${uniqueId}_${file.originalname}`;
 
-        await this.s3Service.uploadFile(file, uniqueFileName);
+        const avisoPrivacidad = await this.avisoPrivacidadRepository.findOne({ where: { id: data.avisoPrivacidadId } });
+
+        if (!avisoPrivacidad) {
+          throw new NotFoundException(`Aviso de privacidad con ID ${data.id} no encontrado`);
+        }
+
+        const uniqueId = uuidv4();
+        const uniqueFileName = `${uniqueId}_${data.nombreArchivoOriginal}`;
+
+        await this.s3Service.uploadFile(file, uniqueFileName, 'AvisoPrivacidad');
 
         const newAvisoArchivo = this.avisoPrivacidadArchivo.create({
-        NombreArchivo: data.nombreArchivo,
-        uuid: uniqueId,
-        avisoPrivacidad: { id: data.avisoPrivacidadId },
-        Activo: true,
-        fechaCreacion: new Date(),
+          nombre: data.nombreArchivo,
+          nombreArchivo: uniqueFileName,
+          avisoPrivacidad: { id: data.avisoPrivacidadId },
+          Activo: true,
+          fechaCreacion: new Date(),
         });
 
         const savedArchivo = await this.avisoPrivacidadArchivo.save(newAvisoArchivo);
@@ -330,16 +337,32 @@ export class AvisoPrivacidadService {
 
     // }
 
-    async getAvisoPrivacidadArchivo(id: number): Promise<any> {
+    async getAvisoPrivacidadArchivo(id: number): Promise<createAvisoPrivacidadArchivoDto> {
         try {
           const aviso = await this.avisoPrivacidadArchivo.findOne({ where: { id } });
       
           if (!aviso) {
             throw new NotFoundException(`Aviso de privacidad archivo con ID ${id} no encontrado`);
           }
+
+          const url = await this.s3Service.getFileBase64(aviso.id, 'avisoPrivacidadArchivosRepository', 'AvisoPrivacidad');
+
+          if (!url) {
+            throw new InternalServerErrorException('No se pudo generar la URL del archivo');
+          }
+
+          const response: createAvisoPrivacidadArchivoDto = {
+            Activo: aviso.Activo,
+            id: aviso.id,
+            nombreArchivo: aviso.nombreArchivo,
+            url: url,
+            // avisoPrivacidadId: aviso.avisoPrivacidad.id,
+            fechaCreacion: aviso.fechaCreacion,
+          }
       
-          return aviso;
+          return response;
         } catch (error) {
+          console.error('Error al obtener el aviso de privacidad archivo:', error);
           throw new InternalServerErrorException('Error al obtener el aviso de privacidad archivo');
         }
     }
@@ -349,24 +372,23 @@ export class AvisoPrivacidadService {
         file: Express.Multer.File = null
       ): Promise<ApiResponse<any>> {
         try {
-          const id = data.id;
       
           // Buscar el aviso de privacidad por su ID
-          const aviso = await this.avisoPrivacidadArchivo.findOne({ where: { id } });
+          const aviso = await this.avisoPrivacidadArchivo.findOne({ where: { id:data.id } });
       
           if (!aviso) {
-            throw new NotFoundException(`Aviso de privacidad con ID ${id} no encontrado`);
+            throw new NotFoundException(`Aviso de privacidad con ID ${data.id} no encontrado`);
           }
       
           // Actualizar los campos necesarios
-          aviso.NombreArchivo = data.nombreArchivo;
+          aviso.nombreArchivo = data.nombreArchivo;
       
           // Si hay un archivo, se podría manejar aquí la lógica para subirlo a S3
-          if (file) {
-            // Lógica para actualizar archivo en S3
-          }
+          // if (file) {
+          //   // Lógica para actualizar archivo en S3
+          // }
       
-          const updatedAviso = await this.avisoPrivacidadRepository.save(aviso);
+          const updatedAviso = await this.avisoPrivacidadArchivo.save(aviso);
       
           return createApiResponse(
             true,
@@ -387,7 +409,7 @@ export class AvisoPrivacidadService {
         await queryRunner.startTransaction();
       
         try {
-          // Buscar el aviso de privacidad
+          // Buscar el aviso de privacidad archivo por su ID
           const aviso = await this.avisoPrivacidadArchivo.findOne({ where: { id } });
       
           if (!aviso) {
@@ -395,19 +417,24 @@ export class AvisoPrivacidadService {
           }
       
           // Verificar si el aviso tiene archivos relacionados
-          const avisoConArchivos = await this.avisoPrivacidadRepository.findOne({
-            where: { id },
-            relations: ['avisoPrivacidadArchivos'],
-          });
+          // const avisoConArchivos = await this.avisoPrivacidadRepository.findOne({
+          //   where: { id },
+          //   relations: ['avisoPrivacidadArchivos'],
+          // });
       
-          if (avisoConArchivos && avisoConArchivos.avisoPrivacidadArchivos.length > 0) {
-            throw new BadRequestException(
-              `No se puede eliminar el aviso de privacidad con ID ${id} porque tiene archivos relacionados`
-            );
-          }
+          // if (avisoConArchivos && avisoConArchivos.avisoPrivacidadArchivos.length > 0) {
+          //   throw new BadRequestException(
+          //     `No se puede eliminar el aviso de privacidad con ID ${id} porque tiene archivos relacionados`
+          //   );
+          // }
       
-          // Eliminar el aviso
+          // Eliminar el archivo de aviso de privacidad de la base de datos
           await queryRunner.manager.delete(avisoPrivacidadArchivos, id);
+
+          // Eliminar archivo de S3
+          const fileName = aviso.nombreArchivo;
+          await this.s3Service.deleteFile(fileName, 'AvisoPrivacidad');
+          console.log('Archivo eliminado de S3:', fileName);
       
           await queryRunner.commitTransaction();
       

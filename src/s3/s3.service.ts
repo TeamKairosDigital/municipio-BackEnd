@@ -7,6 +7,7 @@ import { Upload } from '@aws-sdk/lib-storage';
 import { Archivos } from 'src/documentos/entities/archivos.entity';
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
+import { avisoPrivacidadArchivos } from 'src/aviso-privacidad/entities/avisoPrivacidadArchivos.entity';
 
 @Injectable()
 export class S3Service {
@@ -16,6 +17,8 @@ export class S3Service {
         private configService: ConfigService,
         @InjectRepository(Archivos)
         private archivosRepository: Repository<Archivos>,
+        @InjectRepository(avisoPrivacidadArchivos)
+        private avisoPrivacidadArchivosRepository: Repository<avisoPrivacidadArchivos>,
     ) {
         this.client = new S3Client({
             endpoint: this.configService.get<string>('AWS_BUCKET_REGION'),  // Usamos el endpoint de DigitalOcean
@@ -43,16 +46,16 @@ export class S3Service {
         }
     }
     
-    async getFileBase64(id: number): Promise<string> {
+    async getFileBase64(id: number, repository: string, folder: string): Promise<string> {
         try {
-            const archivo = await this.archivosRepository.findOneBy({ id });
+            const archivo = await this[repository].findOneBy({ id });
             if (!archivo) {
                 throw new Error('Archivo no encontrado');
             }
     
             const params = {
                 Bucket: this.configService.get<string>('AWS_BUCKET_NAME'),
-                Key: archivo.nombreArchivo,
+                Key: `${folder}/${archivo.nombreArchivo}`,
             };
     
             if (!params.Bucket) {
@@ -69,12 +72,12 @@ export class S3Service {
         }
     }
     
-    async uploadFile(file: Express.Multer.File, fileName: string): Promise<any> {
+    async uploadFile(file: Express.Multer.File, fileName: string, folder: string): Promise<any> {
         try {
             const stream = Readable.from(file.buffer);
             const uploadParams = {
                 Bucket: this.configService.get<string>('AWS_BUCKET_NAME'),
-                Key: fileName,
+                Key: `${folder}/${fileName}`,
                 Body: stream,
                 ContentType: file.mimetype,
             };
@@ -91,10 +94,10 @@ export class S3Service {
         }
     }
     
-    async deleteFile(fileName: string): Promise<void> {
+    async deleteFile(fileName: string, folder: string): Promise<void> {
         const params = {
             Bucket: process.env.AWS_BUCKET_NAME,
-            Key: fileName,
+            Key: `${folder}/${fileName}`,
         };
     
         const command = new DeleteObjectCommand(params);

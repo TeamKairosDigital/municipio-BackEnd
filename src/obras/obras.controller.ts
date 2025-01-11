@@ -1,9 +1,10 @@
-import { Body, Controller, Delete, Get, Param, Post, Put, UploadedFile } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpStatus, Param, Post, Put, UploadedFile } from '@nestjs/common';
 import { ApiResponse } from 'src/common/response/ApiResponse';
 import { CreateObrasDto } from 'src/obras/dto/obrasDto';
 import { Obras } from 'src/obras/entities/obras.entity';
 import { ObrasService } from 'src/obras/obras.service';
 import { ApiBearerAuth } from '@nestjs/swagger';
+import { createApiResponse } from 'src/common/response/createApiResponse';
 
 @ApiBearerAuth()
 @Controller('obras')
@@ -15,8 +16,9 @@ export class ObrasController {
   async create(
     @Body() createObrasDto: CreateObrasDto,
     @UploadedFile() file: Express.Multer.File,
-  ): Promise<ApiResponse<Obras>> {
-    return this.obrasService.create(createObrasDto, file);
+  ): Promise<ApiResponse<any>> {
+    const result = await  this.obrasService.create(createObrasDto, file);
+    return createApiResponse(true, 'Obras creado correctamente', result, null, HttpStatus.CREATED);
   }
 
   @Get()

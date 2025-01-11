@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { ApiResponse } from 'src/common/response/ApiResponse';
 import { CreateObrasDto } from 'src/obras/dto/obrasDto';
 import { Obras } from 'src/obras/entities/obras.entity';
+import { v4 as uuidv4 } from 'uuid';
 import { Repository } from 'typeorm';
 import { S3Service } from '../s3/s3.service';
 import { createApiResponse } from 'src/common/response/createApiResponse';
@@ -13,16 +14,36 @@ export class ObrasService {
   constructor(
       @InjectRepository(Obras)
       private readonly obrasRepository: Repository<Obras>,
-      private readonly s3: S3Service
+      private readonly s3Service: S3Service
     ) {}
 
   // Crear nueva obra
-  async create(createObrasDto: CreateObrasDto, file: Express.Multer.File): Promise<ApiResponse<Obras>> {
+  async create(data: CreateObrasDto, file: Express.Multer.File) {
     try {
-      const newObra = this.obrasRepository.create(createObrasDto);
-      const savedObra = await this.obrasRepository.save(newObra);
 
-      return createApiResponse<Obras>(true, 'Obra creada con éxito', savedObra, null, HttpStatus.CREATED);
+          let uniqueFileName = null;
+
+          if(data.nombreArchivo != null && data.nombreArchivo != '') {
+            const uniqueId = uuidv4();
+            uniqueFileName = `${uniqueId}_${data.nombre}`;
+
+            await this.s3Service.uploadFile(file, uniqueFileName, 'Obras');
+          }
+
+          const newObra = this.obrasRepository.create({
+            nombre: data.nombre,
+            descripcion: data.descripcion,
+            autor: data.autor,
+            nombreArchivo: uniqueFileName,
+            Activo: true,
+            fechaCreacion: new Date(),
+            municipality: { id: data.municipality_id },
+            UsuarioCreacionId: data.UsuarioCreacionId
+          });
+
+          const savedObra = await this.obrasRepository.save(newObra);
+
+          return createApiResponse(true, 'Obra creada con éxito', savedObra, null, HttpStatus.CREATED);
     } catch (error) {
       throw new HttpException(
         createApiResponse(false, 'Error al crear la obra', null, error.message, HttpStatus.INTERNAL_SERVER_ERROR),
@@ -34,7 +55,7 @@ export class ObrasService {
   // Obtener lista de obras
   async findAll(): Promise<ApiResponse<Obras[]>> {
     try {
-      const obras = await this.obrasRepository.find();
+      const obras = await this.obrasRepository.find({ order: { id: 'ASC' }});
 
       return createApiResponse<Obras[]>(true, 'Obras obtenidas con éxito', obras, null, HttpStatus.OK);
     } catch (error) {
@@ -48,8 +69,8 @@ export class ObrasService {
   // Obtener una obra por ID
   async findOne(id: number): Promise<ApiResponse<Obras>> {
     try {
-      const obra = await this.obrasRepository.findOneBy({ id });
-
+      const obra = await this.obrasRepository.findOne({ where: { id } });
+      
       if (!obra) {
         throw new HttpException(
           createApiResponse(false, `Obra con ID ${id} no encontrada`, null, null, HttpStatus.NOT_FOUND),

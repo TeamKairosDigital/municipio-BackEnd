@@ -7,10 +7,10 @@ export class avisoPrivacidadArchivos {
     id: number;
 
     @Column()
-    NombreArchivo: string;
+    nombreArchivo: string;
 
     @Column()
-    uuid: string;
+    nombre: string;
 
     @Column()
     Activo: boolean;

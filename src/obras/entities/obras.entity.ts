@@ -14,6 +14,9 @@ export class Obras {
   descripcion: string;
 
   @Column()
+  autor: string;
+
+  @Column()
   nombreArchivo: string;
 
   @Column()
@@ -21,6 +24,12 @@ export class Obras {
 
   @Column()
   fechaCreacion: Date;
+
+  @Column()
+  municipality_id: number;
+
+  @Column()
+  UsuarioCreacionId: number;
 
   // Relación con la entidad Municipality
   @ManyToOne(() => Municipality, (municipality) => municipality.obras)

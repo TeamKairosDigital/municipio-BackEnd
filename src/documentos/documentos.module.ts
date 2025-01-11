@@ -9,7 +9,10 @@ import { S3Module } from 'src/s3/s3.module';
 import { AuthModule } from 'src/auth/auth.module';
 
 @Module({
-    imports: [TypeOrmModule.forFeature([Documentos, Archivos, Periodos]), forwardRef(() => S3Module), forwardRef(() => AuthModule),],
+    imports: [TypeOrmModule.forFeature([Documentos, Archivos, Periodos]), 
+    forwardRef(() => S3Module), 
+    forwardRef(() => AuthModule)
+],
     controllers: [DocumentosController],
     providers: [DocumentosService],
     exports: [DocumentosService, TypeOrmModule]

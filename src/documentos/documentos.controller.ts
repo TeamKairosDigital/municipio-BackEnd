@@ -179,10 +179,10 @@ export class DocumentosController {
         }
     }
 
-    @Get('base64/:id')
-    async getFileBase64(@Param('id') id: number): Promise<ApiResponse<{ base64: string }>> {
+    @Get('base64/:id/:repository')
+    async getFileBase64(@Param('id') id: number, @Param('repository') repository: string): Promise<ApiResponse<{ base64: string }>> {
         try {
-            const base64 = await this.s3Service.getFileBase64(id);
+            const base64 = await this.s3Service.getFileBase64(id, repository, 'Documentos');
             return {
                 success: true,
                 statusCode: HttpStatus.OK,

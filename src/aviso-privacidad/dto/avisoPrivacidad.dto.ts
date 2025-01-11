@@ -1,7 +1,7 @@
 export class AvisoArchivoDto {
     id: number;
     nombreArchivo: string;
-    uuid: string;
+    nombre: string;
     activo: boolean;
     fechaCreacion: string;
 }

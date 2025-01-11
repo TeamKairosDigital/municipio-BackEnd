@@ -14,5 +14,6 @@ import { AuthModule } from 'src/auth/auth.module';
 ],
     controllers: [AvisoPrivacidadController],
     providers: [AvisoPrivacidadService],
+    exports: [AvisoPrivacidadService,TypeOrmModule]
 })
 export class AvisoPrivacidadModule {}

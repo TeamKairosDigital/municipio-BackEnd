@@ -72,9 +72,9 @@ export class DocumentosService {
     async createFile(crearArchivo: createFileDto, file: Express.Multer.File) {
         try {
             const uniqueId = uuidv4();
-            const uniqueFileName = `${uniqueId}_${file.originalname}`;
+            const uniqueFileName = `${uniqueId}_${crearArchivo.nombreArchivo}`;
     
-            await this.s3Service.uploadFile(file, uniqueFileName);
+            await this.s3Service.uploadFile(file, uniqueFileName, 'Documentos');
     
             const newDocument = this.ArchivosRepository.create({
                 nombreArchivo: uniqueFileName,
@@ -111,18 +111,20 @@ export class DocumentosService {
         await queryRunner.startTransaction();
     
         try {
+            // Buscar el archivo del documento
             const document = await this.ArchivosRepository.findOne({ where: { id: documentId } });
     
             if (!document) {
                 throw new NotFoundException('Documento no encontrado');
             }
     
-            const fileName = document.nombreArchivo;
-    
+            // Eliminar el archivo del documento de la base de datos
             await queryRunner.manager.delete(Archivos, documentId);
             console.log('Documento eliminado de la base de datos:', documentId);
     
-            await this.s3Service.deleteFile(fileName);
+            // Eliminar el archivo de S3
+            const fileName = document.nombreArchivo;
+            await this.s3Service.deleteFile(fileName, 'Documentos');
             console.log('Archivo eliminado de S3:', fileName);
     
             await queryRunner.commitTransaction();
