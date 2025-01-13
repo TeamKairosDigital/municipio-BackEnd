@@ -1,4 +1,5 @@
 export class CreateObrasDto {
+    id?: number;
     nombre: string;
     descripcion: string;
     autor: string;

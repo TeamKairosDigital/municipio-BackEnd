@@ -88,12 +88,21 @@ export class ObrasService {
   }
 
   // Actualizar una obra
-  async update(id: number, updateObrasDto: CreateObrasDto): Promise<ApiResponse<Obras>> {
+  async update(id: number, updateObrasDto: CreateObrasDto, file: Express.Multer.File = null): Promise<ApiResponse<Obras>> {
     try {
-      const obra = await this.obrasRepository.preload({
-        id,
-        ...updateObrasDto,
-      });
+      // const obra = await this.obrasRepository.preload({
+      //   id,
+      //   ...updateObrasDto,
+      // });
+
+      // if (!obra) {
+      //   throw new HttpException(
+      //     createApiResponse(false, `Obra con ID ${id} no encontrada`, null, null, HttpStatus.NOT_FOUND),
+      //     HttpStatus.NOT_FOUND,
+      //   );
+      // }
+
+      const obra = await this.obrasRepository.findOne({ where: { id:updateObrasDto.id } });
 
       if (!obra) {
         throw new HttpException(
@@ -101,6 +110,13 @@ export class ObrasService {
           HttpStatus.NOT_FOUND,
         );
       }
+
+      // if(updateObrasDto.nombreArchivo != obra.nombreArchivo) {
+      //   const uniqueId = uuidv4();
+      //   uniqueFileName = `${uniqueId}_${updateObrasDto.nombreArchivo}`;
+
+      //   await this.s3Service.uploadFile(file, uniqueFileName, 'Obras');
+      // }
 
       const updatedObra = await this.obrasRepository.save(obra);
 

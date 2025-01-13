@@ -35,6 +35,7 @@ export class ObrasController {
   async update(
     @Param('id') id: number,
     @Body() updateObrasDto: CreateObrasDto,
+    file: Express.Multer.File = null
   ): Promise<ApiResponse<Obras>> {
     return this.obrasService.update(id, updateObrasDto);
   }
