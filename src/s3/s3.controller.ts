@@ -1,7 +1,9 @@
-import { Controller, Post, Get, Param, UploadedFile, UseInterceptors, HttpStatus } from '@nestjs/common';
+import { Controller, Post, Get, Param, UploadedFile, UseInterceptors, HttpStatus, Body } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiBearerAuth } from '@nestjs/swagger';
+import { ApiResponse } from 'src/common/response/ApiResponse';
 import { S3Service } from 'src/s3/s3.service';
+import { getFileDto } from './dto/getFile.dto';
 
 @ApiBearerAuth()
 @Controller('s3')
@@ -71,6 +73,17 @@ export class S3Controller {
                 errors: error.message,
             };
         }
+    }
+
+    @Post('getFileBase64')
+    async findOne(@Body() getFileDto: getFileDto,): Promise<ApiResponse<string>> {
+        const result = await this.s3Service.getFileBase64(getFileDto.id, getFileDto.repository, getFileDto.folder);
+        return {
+            success: true,
+            statusCode: HttpStatus.OK,
+            message: 'Archivo recuperado con éxito',
+            data: result,
+        };
     }
 
 
