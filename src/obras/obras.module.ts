@@ -12,5 +12,6 @@ import { S3Module } from 'src/s3/s3.module';
     ],
     controllers: [ObrasController],
     providers: [ObrasService],
+    exports: [ObrasService, TypeOrmModule]
 })
 export class ObrasModule {}

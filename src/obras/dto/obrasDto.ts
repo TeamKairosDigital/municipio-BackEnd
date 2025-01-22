@@ -5,8 +5,9 @@ export class CreateObrasDto {
     autor: string;
     nombreArchivo?: string;
     Activo?: boolean;
-    fechaCreacion: Date;
-    municipality_id: number;
-    UsuarioCreacionId: number;
+    fechaCreacion?: Date;
+    municipality_id?: number;
+    UsuarioCreacionId?: number;
+    url?: string;
   }
   

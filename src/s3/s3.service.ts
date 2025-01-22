@@ -8,6 +8,7 @@ import { Archivos } from 'src/documentos/entities/archivos.entity';
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { avisoPrivacidadArchivos } from 'src/aviso-privacidad/entities/avisoPrivacidadArchivos.entity';
+import { Obras } from 'src/obras/entities/obras.entity';
 
 @Injectable()
 export class S3Service {
@@ -19,6 +20,8 @@ export class S3Service {
         private archivosRepository: Repository<Archivos>,
         @InjectRepository(avisoPrivacidadArchivos)
         private avisoPrivacidadArchivosRepository: Repository<avisoPrivacidadArchivos>,
+        @InjectRepository(Obras)
+        private readonly obrasRepository: Repository<Obras>,
     ) {
         this.client = new S3Client({
             endpoint: this.configService.get<string>('AWS_BUCKET_REGION'),  // Usamos el endpoint de DigitalOcean
@@ -94,7 +97,7 @@ export class S3Service {
         }
     }
     
-    async deleteFile(fileName: string, folder: string): Promise<void> {
+    async deleteFile(fileName: string, folder: string): Promise<boolean> {
         const params = {
             Bucket: process.env.AWS_BUCKET_NAME,
             Key: `${folder}/${fileName}`,
@@ -105,9 +108,11 @@ export class S3Service {
         try {
             await this.client.send(command);
             console.log('File deleted successfully from S3');
+            return true;
         } catch (error) {
             console.error('Error deleting file from S3:', error);
-            throw new InternalServerErrorException('Failed to delete file from S3', error.message);
+            // throw new InternalServerErrorException('Failed to delete file from S3', error.message);
+            return false;
         }
     }
     

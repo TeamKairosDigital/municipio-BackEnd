@@ -4,7 +4,7 @@ import { ApiResponse } from 'src/common/response/ApiResponse';
 import { CreateObrasDto } from 'src/obras/dto/obrasDto';
 import { Obras } from 'src/obras/entities/obras.entity';
 import { v4 as uuidv4 } from 'uuid';
-import { Repository } from 'typeorm';
+import { Connection, Repository } from 'typeorm';
 import { S3Service } from '../s3/s3.service';
 import { createApiResponse } from 'src/common/response/createApiResponse';
 
@@ -14,7 +14,8 @@ export class ObrasService {
   constructor(
       @InjectRepository(Obras)
       private readonly obrasRepository: Repository<Obras>,
-      private readonly s3Service: S3Service
+      private readonly s3Service: S3Service,
+      private connection: Connection
     ) {}
 
   // Crear nueva obra
@@ -25,25 +26,29 @@ export class ObrasService {
 
           if(data.nombreArchivo != null && data.nombreArchivo != '') {
             const uniqueId = uuidv4();
-            uniqueFileName = `${uniqueId}_${data.nombre}`;
+            uniqueFileName = `${uniqueId}_${data.nombreArchivo}`;
 
-            await this.s3Service.uploadFile(file, uniqueFileName, 'Obras');
+            const resS3 = await this.s3Service.uploadFile(file, uniqueFileName, 'Obras');
+
+            if(resS3){
+
+              const newObra = this.obrasRepository.create({
+                nombre: data.nombre,
+                descripcion: data.descripcion,
+                autor: data.autor,
+                nombreArchivo: uniqueFileName,
+                Activo: true,
+                fechaCreacion: new Date(),
+                municipality_id: data.municipality_id,
+                UsuarioCreacionId: data.UsuarioCreacionId
+              });
+    
+              const savedObra = await this.obrasRepository.save(newObra);
+    
+              return createApiResponse(true, 'Obra creada con éxito', savedObra, null, HttpStatus.CREATED);
+            }
           }
 
-          const newObra = this.obrasRepository.create({
-            nombre: data.nombre,
-            descripcion: data.descripcion,
-            autor: data.autor,
-            nombreArchivo: uniqueFileName,
-            Activo: true,
-            fechaCreacion: new Date(),
-            municipality: { id: data.municipality_id },
-            UsuarioCreacionId: data.UsuarioCreacionId
-          });
-
-          const savedObra = await this.obrasRepository.save(newObra);
-
-          return createApiResponse(true, 'Obra creada con éxito', savedObra, null, HttpStatus.CREATED);
     } catch (error) {
       throw new HttpException(
         createApiResponse(false, 'Error al crear la obra', null, error.message, HttpStatus.INTERNAL_SERVER_ERROR),
@@ -67,7 +72,7 @@ export class ObrasService {
   }
 
   // Obtener una obra por ID
-  async findOne(id: number): Promise<ApiResponse<Obras>> {
+  async findOne(id: number): Promise<ApiResponse<CreateObrasDto>> {
     try {
       const obra = await this.obrasRepository.findOne({ where: { id } });
       
@@ -78,7 +83,23 @@ export class ObrasService {
         );
       }
 
-      return createApiResponse<Obras>(true, 'Obra obtenida con éxito', obra, null, HttpStatus.OK);
+      const url = await this.s3Service.getFileBase64(id, 'obrasRepository', 'Obras');
+
+      if (!url) {
+        throw new InternalServerErrorException('No se pudo generar la URL del archivo');
+      }
+
+      const response: CreateObrasDto = {
+        id: obra.id,
+        nombre: obra.nombre,
+        descripcion: obra.descripcion,
+        autor: obra.autor,
+        nombreArchivo: obra.nombreArchivo,
+        url: url,
+        fechaCreacion: obra.fechaCreacion
+      }
+
+      return createApiResponse<CreateObrasDto>(true, 'Obra obtenida con éxito', response, null, HttpStatus.OK);
     } catch (error) {
       throw new HttpException(
         createApiResponse(false, 'Error al obtener la obra', null, error.message, HttpStatus.INTERNAL_SERVER_ERROR),
@@ -88,7 +109,11 @@ export class ObrasService {
   }
 
   // Actualizar una obra
-  async update(id: number, updateObrasDto: CreateObrasDto, file: Express.Multer.File = null): Promise<ApiResponse<Obras>> {
+  async update(updateObrasDto: CreateObrasDto, file: Express.Multer.File = null): Promise<ApiResponse<any>> {
+    const queryRunner = this.connection.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
     try {
       // const obra = await this.obrasRepository.preload({
       //   id,
@@ -106,21 +131,37 @@ export class ObrasService {
 
       if (!obra) {
         throw new HttpException(
-          createApiResponse(false, `Obra con ID ${id} no encontrada`, null, null, HttpStatus.NOT_FOUND),
+          createApiResponse(false, `Obra con ID ${updateObrasDto.id } no encontrada`, null, null, HttpStatus.NOT_FOUND),
           HttpStatus.NOT_FOUND,
         );
       }
 
-      // if(updateObrasDto.nombreArchivo != obra.nombreArchivo) {
-      //   const uniqueId = uuidv4();
-      //   uniqueFileName = `${uniqueId}_${updateObrasDto.nombreArchivo}`;
+      if(updateObrasDto.nombreArchivo != obra.nombreArchivo) {
 
-      //   await this.s3Service.uploadFile(file, uniqueFileName, 'Obras');
-      // }
+        // Eliminar archivo de S3
+        const fileName = obra.nombreArchivo;
+        const deleteS3 = await this.s3Service.deleteFile(fileName, 'Obras');
+        // console.log('Archivo eliminado de S3:', fileName);
+
+        if(deleteS3){
+          let uniqueFileName = null;
+          const uniqueId = uuidv4();
+          uniqueFileName = `${uniqueId}_${updateObrasDto.nombreArchivo}`;
+  
+          await this.s3Service.uploadFile(file, uniqueFileName, 'Obras');
+  
+          obra.nombreArchivo = uniqueFileName;
+        }
+ 
+      }
+
+      obra.nombre = updateObrasDto.nombre;
+      obra.descripcion = updateObrasDto.descripcion;
+      obra.autor = updateObrasDto.autor;
 
       const updatedObra = await this.obrasRepository.save(obra);
 
-      return createApiResponse<Obras>(true, 'Obra actualizada con éxito', updatedObra, null, HttpStatus.OK);
+      return createApiResponse<any>(true, 'Obra actualizada con éxito', null, null, HttpStatus.OK);
     } catch (error) {
       throw new HttpException(
         createApiResponse(false, 'Error al actualizar la obra', null, error.message, HttpStatus.INTERNAL_SERVER_ERROR),
@@ -150,173 +191,52 @@ export class ObrasService {
     }
   }
 
-  // // Crear nueva obra
-  // async create(createObrasDto: CreateObrasDto, file: Express.Multer.File): Promise<ApiResponse<Obras>> {
+  async deleteObras(obraId: number): Promise<any> {
+    const queryRunner = this.connection.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
 
-  //   try {
+    try {
+        const obra = await this.obrasRepository.findOne({
+        where: { id: obraId }
+        });
 
-  //     const newObra = this.obrasRepository.create(createObrasDto);
-  //     const savedObra = await this.obrasRepository.save(newObra);
+        if (!obra) {
+          throw new NotFoundException(`Aviso de privacidad con ID ${obraId} no encontrado`);
+        }
 
-  //     return {
-  //       success: true,
-  //       statusCode: 201,
-  //       message: 'Obra creado con éxito',
-  //       data: savedObra,
-  //     };
+        // Eliminar archivo de S3
+        const fileName = obra.nombreArchivo;
+        const deleteS3 = await this.s3Service.deleteFile(fileName, 'Obras');
+        console.log('Archivo eliminado de S3:', fileName);
 
-  //   } catch (error) {
+        if(deleteS3){
+          // Eliminar el archivo de obras de la base de datos
+          await queryRunner.manager.delete(Obras, obraId);
+          await queryRunner.commitTransaction();
+          return createApiResponse(
+            true,
+            'Obra eliminado exitosamente',
+            null,
+            null,
+            HttpStatus.OK
+          );
+        }else{
+          return createApiResponse(
+            false,
+            'Error al eliminar la obra',
+            null,
+            null,
+            HttpStatus.BAD_REQUEST
+          );
+        }
 
-  //     return {
-  //       success: false,
-  //       statusCode: 500,
-  //       message: 'Error al crear la obra',
-  //       errors: error.message,
-  //     };
-
-  //   }
-
-  // }
-
-  // // Obtener lista de obras
-  // async findAll(): Promise<ApiResponse<Obras[]>> {
-
-  //   try {
-
-  //     const Obras = await this.obrasRepository.find();
-
-  //     return {
-  //       success: true,
-  //       statusCode: 200,
-  //       message: 'Obras obtenidos con éxito',
-  //       data: Obras,
-  //     };
-
-  //   } catch (error) {
-
-  //     return {
-  //       success: false,
-  //       statusCode: 500,
-  //       message: 'Error al obtener las obras',
-  //       errors: error.message,
-  //     };
-
-  //   }
-
-  // }
-
-  // // Obtener un obra por ID
-  // async findOne(id: number): Promise<ApiResponse<Obras>> {
-
-  //   try {
-
-  //     const Obra = await this.obrasRepository.findOneBy({ id });
-      
-  //     if (!Obra) {
-  //       return {
-  //         success: false,
-  //         statusCode: 404,
-  //         message: `Obra con ID ${id} no encontrado`,
-  //       };
-  //     }
-
-  //     return {
-  //       success: true,
-  //       statusCode: 200,
-  //       message: 'Obra obtenido con éxito',
-  //       data: Obra,
-  //     };
-
-  //   } catch (error) {
-
-  //     return {
-  //       success: false,
-  //       statusCode: 500,
-  //       message: 'Error al obtener la Obra',
-  //       errors: error.message,
-  //     };
-
-  //   }
-
-  // }
-
-  // // Actualizar una obra
-  // async update(id: number, updateObrasDto: CreateObrasDto): Promise<ApiResponse<Obras>> {
-
-  //   try {
-
-  //     const Obra = await this.obrasRepository.preload({
-  //       id,
-  //       ...updateObrasDto,
-  //     });
-
-  //     if (!Obra) {
-
-  //       return {
-  //         success: false,
-  //         statusCode: 404,
-  //         message: `Obra con ID ${id} no encontrado`,
-  //       };
-
-  //     }
-
-  //     const updatedObra = await this.obrasRepository.save(Obra);
-
-  //     return {
-  //       success: true,
-  //       statusCode: 200,
-  //       message: 'Obra actualizado con éxito',
-  //       data: updatedObra,
-  //     };
-
-  //   } catch (error) {
-
-  //     return {
-  //       success: false,
-  //       statusCode: 500,
-  //       message: 'Error al actualizar el Obra',
-  //       errors: error.message,
-  //     };
-
-  //   }
-
-  // }
-
-  // // Eliminar un obra
-  // async remove(id: number): Promise<ApiResponse<any>> {
-
-  //   try {
-
-  //     const result = await this.obrasRepository.delete(id);
-
-  //     if (result.affected === 0) {
-
-  //       return {
-  //         success: false,
-  //         statusCode: 404,
-  //         message: `Obra con ID ${id} no encontrado`,
-  //       };
-
-  //     }
-
-  //     return {
-  //       success: true,
-  //       statusCode: 200,
-  //       message: 'Obra eliminado con éxito',
-  //       data: null,
-  //     };
-
-  //   } catch (error) {
-
-  //     return {
-  //       success: false,
-  //       statusCode: 500,
-  //       message: 'Error al eliminar el Obra',
-  //       errors: error.message,
-  //     };
-      
-  //   }
-
-  // }
+    } catch (error) {
+        await queryRunner.rollbackTransaction();
+        throw new InternalServerErrorException('Error al eliminar el aviso de privacidad');
+    } finally {
+        await queryRunner.release();
+    }
+  }
 
 }
