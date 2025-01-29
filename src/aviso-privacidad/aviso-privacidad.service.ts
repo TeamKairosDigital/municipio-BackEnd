@@ -13,6 +13,8 @@ import { ApiResponse } from 'src/common/response/ApiResponse';
 import { AvisoPrivacidadDto } from 'src/aviso-privacidad/dto/avisoPrivacidad.dto';
 import { avisoPrivacidadArchivos } from './entities/avisoPrivacidadArchivos.entity';
 import { S3Service } from 'src/s3/s3.service';
+import { format } from 'date-fns';
+import { es } from 'date-fns/locale';
 
 @Injectable()
 export class AvisoPrivacidadService {
@@ -52,6 +54,7 @@ export class AvisoPrivacidadService {
               id: archivo.id,
               nombreArchivo: archivo.nombreArchivo,
               nombre: archivo.nombre,
+              tipo: archivo.tipo,
               activo: archivo.Activo,
               fechaCreacion: new Date(archivo.fechaCreacion).toLocaleString('es-ES', {
                 year: 'numeric',
@@ -166,6 +169,7 @@ export class AvisoPrivacidadService {
         const newAvisoArchivo = this.avisoPrivacidadArchivo.create({
           nombre: data.nombreArchivo,
           nombreArchivo: uniqueFileName,
+          tipo: data.tipo,
           avisoPrivacidad: { id: data.avisoPrivacidadId },
           Activo: true,
           fechaCreacion: new Date(),
@@ -355,6 +359,7 @@ export class AvisoPrivacidadService {
             Activo: aviso.Activo,
             id: aviso.id,
             nombreArchivo: aviso.nombreArchivo,
+            tipo: aviso.tipo,
             url: url,
             // avisoPrivacidadId: aviso.avisoPrivacidad.id,
             fechaCreacion: aviso.fechaCreacion,
@@ -543,5 +548,66 @@ export class AvisoPrivacidadService {
     //     }
 
     // }
+
+    async getListAvisoPrivacidadWEB(): Promise<ApiResponse<AvisoPrivacidadDto[]>> {
+      try {
+        const avisos = await this.avisoPrivacidadRepository.find({
+          relations: ['avisoPrivacidadArchivos'],
+          order: { id: 'ASC' },
+        });
+    
+        // Transformar los datos al modelo definido
+        const transformedAvisos = avisos.map((aviso) => ({
+          id: aviso.id,
+          nombre: aviso.Nombre,
+          activo: aviso.Activo,
+          fechaCreacion: format(new Date(aviso.fechaCreacion), "dd 'de' MMMM yyyy", { locale: es }),
+          archivos: (aviso.avisoPrivacidadArchivos ?? []).map((archivo) => ({
+            id: archivo.id,
+            nombreArchivo: archivo.nombreArchivo,
+            nombre: archivo.nombre,
+            tipo: archivo.tipo,
+            activo: archivo.Activo,
+            fechaCreacion: format(new Date(archivo.fechaCreacion), "dd 'de' MMMM yyyy", { locale: es }),
+          })),
+        }));
+    
+        return createApiResponse<AvisoPrivacidadDto[]>(true, 'Lista obtenida correctamente', transformedAvisos, null, 200);
+      } catch (error) {
+        throw new InternalServerErrorException('Error al obtener la lista de avisos de privacidad');
+      }
+    }
+
+    //
+    async getAvisoPrivacidadArchivoWEB(id: number): Promise<ApiResponse<string>> {
+      try {
+        const aviso = await this.avisoPrivacidadArchivo.findOne({ where: { id } });
+
+        if (!aviso) {
+          throw new NotFoundException(`Aviso de privacidad archivo con ID ${id} no encontrado`);
+        }
+
+        const base64File = await this.s3Service.getFileBase64(aviso.id, 'avisoPrivacidadArchivosRepository', 'AvisoPrivacidad');
+
+        if (!base64File) {
+          throw new InternalServerErrorException('No se pudo obtener el archivo en base64');
+        }
+
+        // const response: createAvisoPrivacidadArchivoDto = {
+        //   id: aviso.id,
+        //   nombreArchivo: aviso.nombreArchivo,
+        //   tipo: aviso.tipo,
+        //   Activo: aviso.Activo,
+        //   fechaCreacion: aviso.fechaCreacion,
+        //   url: base64File,
+        // };
+
+        const response = base64File;
+
+        return createApiResponse<string>(true, 'Archivo obtenido correctamente', response, null, 200);
+      } catch (error) {
+        throw new InternalServerErrorException('Error al obtener el archivo de aviso de privacidad');
+      }
+    }
 
 }

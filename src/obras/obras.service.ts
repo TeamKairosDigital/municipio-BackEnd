@@ -7,6 +7,9 @@ import { v4 as uuidv4 } from 'uuid';
 import { Connection, Repository } from 'typeorm';
 import { S3Service } from '../s3/s3.service';
 import { createApiResponse } from 'src/common/response/createApiResponse';
+import { obrasWEBDto } from './dto/obrasWEB.dto';
+import { format } from 'date-fns';
+import { es } from 'date-fns/locale';
 
 @Injectable()
 export class ObrasService {
@@ -236,6 +239,41 @@ export class ObrasService {
         throw new InternalServerErrorException('Error al eliminar el aviso de privacidad');
     } finally {
         await queryRunner.release();
+    }
+  }
+
+
+  async findAllWEB(): Promise<ApiResponse<obrasWEBDto[]>> {
+    try {
+    // Obtén las obras con los campos necesarios
+    const obras = await this.obrasRepository.find({
+      select: ['id', 'nombre', 'descripcion', 'autor', 'fechaCreacion'],
+      order: { id: 'ASC' },
+    });
+
+    // Mapea las obras y busca la imagen para cada una
+    const obrasConUrl = await Promise.all(
+      obras.map(async (obra) => {
+        const imagenUrl = await this.s3Service.getFileBase64(
+          obra.id, // Ajusta esto según cómo identifiques las imágenes en S3
+          'obrasRepository',
+          'Obras'
+        );
+
+        return {
+          ...obra,
+          imagenUrl, // Añade la URL de la imagen al resultado
+          fechaCreacion: format(new Date(obra.fechaCreacion), "dd 'de' MMMM yyyy", { locale: es }), // Formato deseado
+        };
+      })
+    );
+
+      return createApiResponse<obrasWEBDto[]>(true, 'Obras obtenidas con éxito', obrasConUrl, null, HttpStatus.OK);
+    } catch (error) {
+      throw new HttpException(
+        createApiResponse(false, 'Error al obtener las obras', null, error.message, HttpStatus.INTERNAL_SERVER_ERROR),
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
     }
   }
 

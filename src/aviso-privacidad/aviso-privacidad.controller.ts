@@ -10,8 +10,6 @@ import { ApiBearerAuth } from '@nestjs/swagger';
 import { AuthGuard } from 'src/auth/guards/auth.guard';
 import { AvisoPrivacidadService } from './aviso-privacidad.service';
 
-@UseGuards(AuthGuard)
-@ApiBearerAuth()
 @Controller('aviso-privacidad')
 export class AvisoPrivacidadController {
 
@@ -19,6 +17,19 @@ export class AvisoPrivacidadController {
         private avisoPrivaciadService: AvisoPrivacidadService
     ) { }
 
+    @Get('getListAvisoPrivacidadWEB')
+    async getListAvisoPrivacidadWEB(
+    ): Promise<ApiResponse<AvisoPrivacidadDto[]>> {
+      return await this.avisoPrivaciadService.getListAvisoPrivacidadWEB();
+    }
+
+    @Get('getAvisoPrivacidadArchivoWEB/:id')
+    async getAvisoPrivacidadArchivoWEB(@Param('id', ParseIntPipe) id: number): Promise<ApiResponse<string>> {
+      return await this.avisoPrivaciadService.getAvisoPrivacidadArchivoWEB(id);
+    }
+
+    @ApiBearerAuth()
+    @UseGuards(AuthGuard)
     @Post('getListAvisoPrivacidad')
     async getListAvisoPrivacidad(
       @Body() data: filterAvisoPrivacidadDto
@@ -26,24 +37,32 @@ export class AvisoPrivacidadController {
       return await this.avisoPrivaciadService.getListAvisoPrivacidad(data);
     }
     
+    @ApiBearerAuth()
+    @UseGuards(AuthGuard)
     @Post('createAvisoPrivacidad')
     async createAvisoPrivacidad(@Body() data: createAvisoPrivacidadDto): Promise<ApiResponse<any>> {
       const result = await this.avisoPrivaciadService.createAvisoPrivacidad(data);
       return createApiResponse(true, 'Aviso de privacidad creado correctamente', result, null, HttpStatus.CREATED);
     }
   
+    @ApiBearerAuth()
+    @UseGuards(AuthGuard)
     @Get('getAvisoPrivacidad/:id')
     async getAvisoPrivacidad(@Param('id', ParseIntPipe) id: number): Promise<ApiResponse<any>> {
       const result = await this.avisoPrivaciadService.getAvisoPrivacidad(id);
       return createApiResponse(true, 'Aviso de privacidad obtenido correctamente', result, null, HttpStatus.OK);
     }
   
+    @ApiBearerAuth()
+    @UseGuards(AuthGuard)
     @Put('editAvisoPrivacidad')
     async editAvisoPrivacidad(@Body() data: createAvisoPrivacidadDto): Promise<ApiResponse<any>> {
       const result = await this.avisoPrivaciadService.editAvisoPrivacidad(data);
       return createApiResponse(true, 'Aviso de privacidad editado correctamente', result, null, HttpStatus.OK);
     }
   
+    @ApiBearerAuth()
+    @UseGuards(AuthGuard)
     @Delete('deleteAvisoPrivacidad/:id')
     async deleteDocument(@Param('id', ParseIntPipe) id: number): Promise<ApiResponse<void>> {
       try {
@@ -54,6 +73,8 @@ export class AvisoPrivacidadController {
       }
     }
   
+    @ApiBearerAuth()
+    @UseGuards(AuthGuard)
     @Post('createAvisoPrivacidadArchivo')
     @UseInterceptors(FileInterceptor('archivo'))
     async createAvisoPrivacidadArchivo(
@@ -64,12 +85,16 @@ export class AvisoPrivacidadController {
       return createApiResponse(true, 'Aviso de privacidad creado correctamente', result, null, HttpStatus.CREATED);
     }
   
+    @ApiBearerAuth()
+    @UseGuards(AuthGuard)
     @Get('getAvisoPrivacidadArchivo/:id')
     async getAvisoPrivacidadArchivo(@Param('id', ParseIntPipe) id: number): Promise<ApiResponse<createAvisoPrivacidadArchivoDto>> {
       const result = await this.avisoPrivaciadService.getAvisoPrivacidadArchivo(id);
       return createApiResponse(true, 'Aviso de privacidad obtenido correctamente', result, null, HttpStatus.OK);
     }
   
+    @ApiBearerAuth()
+    @UseGuards(AuthGuard)
     @Put('editAvisoPrivacidadArchivo')
     @UseInterceptors(FileInterceptor('archivo'))
     async editAvisoPrivacidadArchivo(
@@ -80,6 +105,8 @@ export class AvisoPrivacidadController {
       return createApiResponse(true, 'Aviso de privacidad editado correctamente', result, null, HttpStatus.OK);
     }
   
+    @ApiBearerAuth()
+    @UseGuards(AuthGuard)
     @Delete('deleteAvisoPrivacidadArchivo/:id')
     async deleteAvisoPrivacidadArchivo(@Param('id', ParseIntPipe) id: number): Promise<ApiResponse<void>> {
       try {

@@ -1,6 +1,7 @@
 export class createAvisoPrivacidadArchivoDto {
     id?: number;
     nombreArchivo: string;
+    tipo: number;
     nombreArchivoOriginal?: string;
     uuid?: string;
     url: string;

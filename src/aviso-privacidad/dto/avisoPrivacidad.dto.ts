@@ -2,6 +2,7 @@ export class AvisoArchivoDto {
     id: number;
     nombreArchivo: string;
     nombre: string;
+    tipo: number;
     activo: boolean;
     fechaCreacion: string;
 }

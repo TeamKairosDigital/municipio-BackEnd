@@ -9,6 +9,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AuthGuard } from 'src/auth/guards/auth.guard';
 import { AvisoPrivacidadModule } from 'src/aviso-privacidad/aviso-privacidad.module';
 import { DocumentosModule } from 'src/documentos/documentos.module';
+import { ObrasModule } from 'src/obras/obras.module';
 
 @Module({
     imports: [
@@ -30,6 +31,7 @@ import { DocumentosModule } from 'src/documentos/documentos.module';
       forwardRef(() => UserModule),
       forwardRef(() => AvisoPrivacidadModule),
       forwardRef(() => DocumentosModule),
+      forwardRef(() => ObrasModule),
     ],
     providers: [AuthService, JwtStrategy, AuthGuard],
     controllers: [AuthController],

@@ -12,6 +12,7 @@ async function bootstrap() {
 
   const allowedOrigins = [
     'http://localhost:4200',
+    'http://localhost:4300',
     'https://larrainzar-front-nhil2.ondigitalocean.app',
     'http://localhost:3000/api'
   ];

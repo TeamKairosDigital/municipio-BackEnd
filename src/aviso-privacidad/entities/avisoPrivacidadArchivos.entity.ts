@@ -13,6 +13,9 @@ export class avisoPrivacidadArchivos {
     nombre: string;
 
     @Column()
+    tipo: number;
+
+    @Column()
     Activo: boolean;
 
     @Column()
