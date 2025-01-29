@@ -10,8 +10,6 @@ import { ApiBearerAuth } from '@nestjs/swagger';
 import { AuthGuard } from 'src/auth/guards/auth.guard';
 import { DocumentosService } from './documentos.service';
 
-@UseGuards(AuthGuard)
-@ApiBearerAuth()
 @Controller('documentos')
 export class DocumentosController {
 
@@ -35,6 +33,8 @@ export class DocumentosController {
         }
     }
     
+    @ApiBearerAuth()
+    @UseGuards(AuthGuard)
     @Post('create-file')
     @UseInterceptors(FileInterceptor('archivo'))
     async postCreateFile(
@@ -69,6 +69,8 @@ export class DocumentosController {
         }
     }
     
+    @ApiBearerAuth()
+    @UseGuards(AuthGuard)
     @Delete(':id')
     async deleteDocument(@Param('id', ParseIntPipe) id: number, @Res() res): Promise<ApiResponse<void>> {
         try {
@@ -159,6 +161,8 @@ export class DocumentosController {
 
     // }
 
+    @ApiBearerAuth()
+    @UseGuards(AuthGuard)
     @Get('getFileURL/:id')
     async getFileURL(@Param('id') id: number): Promise<ApiResponse<{ url: string }>> {
         try {
