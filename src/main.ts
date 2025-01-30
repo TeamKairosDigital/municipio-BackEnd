@@ -11,10 +11,10 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
   const allowedOrigins = [
-    'http://localhost:4200',
-    'http://localhost:4300',
+    // 'http://localhost:4200',
+    // 'http://localhost:4300',
     'https://larrainzar-front-nhil2.ondigitalocean.app',
-    'http://localhost:3000/api'
+    'https://coral-app-jhokf.ondigitalocean.app/',
   ];
 
   // Habilitar CORS
