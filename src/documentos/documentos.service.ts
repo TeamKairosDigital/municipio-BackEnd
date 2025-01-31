@@ -2,7 +2,7 @@ import { Injectable, InternalServerErrorException, NotFoundException } from '@ne
 import { InjectRepository } from '@nestjs/typeorm';
 import { Archivos } from 'src/documentos/entities/archivos.entity';
 import { createFileDto } from 'src/documentos/dto/createFileDto';
-import { Connection, Repository } from 'typeorm';
+import { Connection, Like, Repository } from 'typeorm';
 import { periodoDto } from 'src/documentos/dto/periodo';
 import { DocumentosFiltrosDto } from 'src/documentos/dto/DocumentosFiltrosDto';
 import { v4 as uuidv4 } from 'uuid';
@@ -27,6 +27,10 @@ export class DocumentosService {
     async getDocumentsWithFilesByYear(data: DocumentosFiltrosDto): Promise<any[]> {
         try {
             const whereConditions: any = {};
+
+            if (data.documento != '') {
+                whereConditions.nombreDocumento = Like(`%${data.documento}%`); // Permite coincidencias parciales
+            }
     
             if (data.ley != '-1') {
                 whereConditions.ley = data.ley;
