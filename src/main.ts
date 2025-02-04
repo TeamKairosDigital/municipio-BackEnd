@@ -15,6 +15,7 @@ async function bootstrap() {
     // 'http://localhost:4300',
     'https://larrainzar-front-nhil2.ondigitalocean.app',
     'https://coral-app-jhokf.ondigitalocean.app',
+    'https://municipiolarrainzar.gob.mx'
   ];
 
   // Habilitar CORS

@@ -23,7 +23,7 @@ import { ObrasModule } from 'src/obras/obras.module';
               const secret = configService.get<string>('JWT_SECRET');
               return {
                   secret,
-                  signOptions: { expiresIn: '1h' },
+                  signOptions: { expiresIn: '12h' },
               };
           },
           inject: [ConfigService],
