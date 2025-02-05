@@ -3,6 +3,7 @@ import { Archivos } from 'src/documentos/entities/archivos.entity';
 import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, OneToMany, JoinColumn } from 'typeorm';
 import { Municipality } from './Municipality.entity';
 import { Obras } from 'src/obras/entities/obras.entity';
+import { transparenciaOtrosDocumentos } from 'src/aviso-privacidad/entities/transparenciaOtrosDocumentos.entity';
 
 @Entity()
 export class Users {
@@ -44,5 +45,11 @@ export class Users {
     // Relación con la entidad Obras
     @OneToMany(() => Obras, (obra) => obra.municipality)
     obras: Obras[];
+
+    @OneToMany(() => transparenciaOtrosDocumentos, (otroDocumento) => otroDocumento.usuario_creacion)
+    usuario_creacion: transparenciaOtrosDocumentos[];
+
+    @OneToMany(() => transparenciaOtrosDocumentos, (otroDocumento) => otroDocumento.usuario_modificacion)
+    usuario_modificacion: transparenciaOtrosDocumentos[];
 
 }

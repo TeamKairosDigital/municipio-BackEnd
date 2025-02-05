@@ -6,9 +6,10 @@ import { AvisoPrivacidadController } from './aviso-privacidad.controller';
 import { AvisoPrivacidadService } from './aviso-privacidad.service';
 import { S3Module } from 'src/s3/s3.module';
 import { AuthModule } from 'src/auth/auth.module';
+import { transparenciaOtrosDocumentos } from './entities/transparenciaOtrosDocumentos.entity';
 
 @Module({
-    imports: [TypeOrmModule.forFeature([avisoPrivacidad, avisoPrivacidadArchivos]), 
+    imports: [TypeOrmModule.forFeature([avisoPrivacidad, avisoPrivacidadArchivos, transparenciaOtrosDocumentos]), 
     forwardRef(() => S3Module),
     forwardRef(() => AuthModule),
 ],

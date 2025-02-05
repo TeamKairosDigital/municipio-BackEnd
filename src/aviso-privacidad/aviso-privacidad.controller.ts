@@ -5,275 +5,161 @@ import { createAvisoPrivacidadArchivoDto } from 'src/aviso-privacidad/dto/create
 import { createAvisoPrivacidadDto } from 'src/aviso-privacidad/dto/createAvisoPrivacidadDto';
 import { filterAvisoPrivacidadDto } from 'src/aviso-privacidad/dto/filterAvisoPrivacidadDto';
 import { createApiResponse } from 'src/common/response/createApiResponse';
-import { AvisoPrivacidadDto } from 'src/aviso-privacidad/dto/avisoPrivacidad.dto';
+import { AvisoArchivoDto, AvisoPrivacidadDto } from 'src/aviso-privacidad/dto/avisoPrivacidad.dto';
 import { ApiBearerAuth } from '@nestjs/swagger';
 import { AuthGuard } from 'src/auth/guards/auth.guard';
 import { AvisoPrivacidadService } from './aviso-privacidad.service';
+import { createOtroDocumentoDto } from './dto/createOtroDocumento.dto';
+import { OtrosDocumentosDto } from './dto/otrosDocumentos.dto';
 
 @Controller('aviso-privacidad')
 export class AvisoPrivacidadController {
 
-    constructor(
-        private avisoPrivaciadService: AvisoPrivacidadService
-    ) { }
+  constructor(
+      private avisoPrivaciadService: AvisoPrivacidadService
+  ) { }
 
-    @Get('getListAvisoPrivacidadWEB')
-    async getListAvisoPrivacidadWEB(
-    ): Promise<ApiResponse<AvisoPrivacidadDto[]>> {
-      return await this.avisoPrivaciadService.getListAvisoPrivacidadWEB();
-    }
+  @Get('getListAvisoPrivacidadWEB')
+  async getListAvisoPrivacidadWEB(
+  ): Promise<ApiResponse<AvisoPrivacidadDto[]>> {
+    return await this.avisoPrivaciadService.getListAvisoPrivacidadWEB();
+  }
 
-    @Get('getAvisoPrivacidadArchivoWEB/:id')
-    async getAvisoPrivacidadArchivoWEB(@Param('id', ParseIntPipe) id: number): Promise<ApiResponse<string>> {
-      return await this.avisoPrivaciadService.getAvisoPrivacidadArchivoWEB(id);
-    }
+  @Get('getAvisoPrivacidadArchivoWEB/:id')
+  async getAvisoPrivacidadArchivoWEB(@Param('id', ParseIntPipe) id: number): Promise<ApiResponse<string>> {
+    return await this.avisoPrivaciadService.getAvisoPrivacidadArchivoWEB(id);
+  }
 
-    @ApiBearerAuth()
-    @UseGuards(AuthGuard)
-    @Post('getListAvisoPrivacidad')
-    async getListAvisoPrivacidad(
-      @Body() data: filterAvisoPrivacidadDto
-    ): Promise<ApiResponse<AvisoPrivacidadDto[]>> {
-      return await this.avisoPrivaciadService.getListAvisoPrivacidad(data);
-    }
-    
-    @ApiBearerAuth()
-    @UseGuards(AuthGuard)
-    @Post('createAvisoPrivacidad')
-    async createAvisoPrivacidad(@Body() data: createAvisoPrivacidadDto): Promise<ApiResponse<any>> {
-      const result = await this.avisoPrivaciadService.createAvisoPrivacidad(data);
-      return createApiResponse(true, 'Aviso de privacidad creado correctamente', result, null, HttpStatus.CREATED);
-    }
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard)
+  @Post('getListAvisoPrivacidad')
+  async getListAvisoPrivacidad(
+    @Body() data: filterAvisoPrivacidadDto
+  ): Promise<ApiResponse<AvisoPrivacidadDto[]>> {
+    return await this.avisoPrivaciadService.getListAvisoPrivacidad(data);
+  }
   
-    @ApiBearerAuth()
-    @UseGuards(AuthGuard)
-    @Get('getAvisoPrivacidad/:id')
-    async getAvisoPrivacidad(@Param('id', ParseIntPipe) id: number): Promise<ApiResponse<any>> {
-      const result = await this.avisoPrivaciadService.getAvisoPrivacidad(id);
-      return createApiResponse(true, 'Aviso de privacidad obtenido correctamente', result, null, HttpStatus.OK);
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard)
+  @Post('createAvisoPrivacidad')
+  async createAvisoPrivacidad(@Body() data: createAvisoPrivacidadDto): Promise<ApiResponse<any>> {
+    const result = await this.avisoPrivaciadService.createAvisoPrivacidad(data);
+    return createApiResponse(true, 'Aviso de privacidad creado correctamente', result, null, HttpStatus.CREATED);
+  }
+
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard)
+  @Get('getAvisoPrivacidad/:id')
+  async getAvisoPrivacidad(@Param('id', ParseIntPipe) id: number): Promise<ApiResponse<any>> {
+    const result = await this.avisoPrivaciadService.getAvisoPrivacidad(id);
+    return createApiResponse(true, 'Aviso de privacidad obtenido correctamente', result, null, HttpStatus.OK);
+  }
+
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard)
+  @Put('editAvisoPrivacidad')
+  async editAvisoPrivacidad(@Body() data: createAvisoPrivacidadDto): Promise<ApiResponse<any>> {
+    const result = await this.avisoPrivaciadService.editAvisoPrivacidad(data);
+    return createApiResponse(true, 'Aviso de privacidad editado correctamente', result, null, HttpStatus.OK);
+  }
+
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard)
+  @Delete('deleteAvisoPrivacidad/:id')
+  async deleteDocument(@Param('id', ParseIntPipe) id: number): Promise<ApiResponse<void>> {
+    try {
+      await this.avisoPrivaciadService.deleteAvisoPrivacidad(id);
+      return createApiResponse(true, 'Aviso de privacidad eliminado exitosamente', null, null, HttpStatus.OK);
+    } catch (error) {
+      return createApiResponse(false, 'Error al eliminar aviso de privacidad', null, error.message, HttpStatus.INTERNAL_SERVER_ERROR);
     }
+  }
+
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard)
+  @Post('createAvisoPrivacidadArchivo')
+  @UseInterceptors(FileInterceptor('archivo'))
+  async createAvisoPrivacidadArchivo(
+    @Body() data: createAvisoPrivacidadArchivoDto,
+    @UploadedFile() file: Express.Multer.File,
+  ): Promise<ApiResponse<any>> {
+    const result = await this.avisoPrivaciadService.createAvisoPrivacidadArchivo(data, file);
+    return createApiResponse(true, 'Aviso de privacidad creado correctamente', result, null, HttpStatus.CREATED);
+  }
+
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard)
+  @Get('getAvisoPrivacidadArchivo/:id')
+  async getAvisoPrivacidadArchivo(@Param('id', ParseIntPipe) id: number): Promise<ApiResponse<createAvisoPrivacidadArchivoDto>> {
+    const result = await this.avisoPrivaciadService.getAvisoPrivacidadArchivo(id);
+    return createApiResponse(true, 'Aviso de privacidad obtenido correctamente', result, null, HttpStatus.OK);
+  }
+
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard)
+  @Put('editAvisoPrivacidadArchivo')
+  @UseInterceptors(FileInterceptor('archivo'))
+  async editAvisoPrivacidadArchivo(
+    @Body() data: createAvisoPrivacidadArchivoDto,
+    // @UploadedFile() file: Express.Multer.File,
+  ): Promise<ApiResponse<any>> {
+    const result = await this.avisoPrivaciadService.editAvisoPrivacidadArchivo(data);
+    return createApiResponse(true, 'Aviso de privacidad editado correctamente', result, null, HttpStatus.OK);
+  }
+
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard)
+  @Delete('deleteAvisoPrivacidadArchivo/:id')
+  async deleteAvisoPrivacidadArchivo(@Param('id', ParseIntPipe) id: number): Promise<ApiResponse<void>> {
+    try {
+      await this.avisoPrivaciadService.deleteAvisoPrivacidadArchivo(id);
+      return createApiResponse(true, 'Documento y archivo eliminados exitosamente', null, null, HttpStatus.OK);
+    } catch (error) {
+      return createApiResponse(false, 'Error al eliminar documento y archivo', null, error.message, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
   
-    @ApiBearerAuth()
-    @UseGuards(AuthGuard)
-    @Put('editAvisoPrivacidad')
-    async editAvisoPrivacidad(@Body() data: createAvisoPrivacidadDto): Promise<ApiResponse<any>> {
-      const result = await this.avisoPrivaciadService.editAvisoPrivacidad(data);
-      return createApiResponse(true, 'Aviso de privacidad editado correctamente', result, null, HttpStatus.OK);
-    }
-  
-    @ApiBearerAuth()
-    @UseGuards(AuthGuard)
-    @Delete('deleteAvisoPrivacidad/:id')
-    async deleteDocument(@Param('id', ParseIntPipe) id: number): Promise<ApiResponse<void>> {
-      try {
-        await this.avisoPrivaciadService.deleteAvisoPrivacidad(id);
-        return createApiResponse(true, 'Aviso de privacidad eliminado exitosamente', null, null, HttpStatus.OK);
-      } catch (error) {
-        return createApiResponse(false, 'Error al eliminar aviso de privacidad', null, error.message, HttpStatus.INTERNAL_SERVER_ERROR);
-      }
-    }
-  
-    @ApiBearerAuth()
-    @UseGuards(AuthGuard)
-    @Post('createAvisoPrivacidadArchivo')
-    @UseInterceptors(FileInterceptor('archivo'))
-    async createAvisoPrivacidadArchivo(
-      @Body() data: createAvisoPrivacidadArchivoDto,
-      @UploadedFile() file: Express.Multer.File,
-    ): Promise<ApiResponse<any>> {
-      const result = await this.avisoPrivaciadService.createAvisoPrivacidadArchivo(data, file);
-      return createApiResponse(true, 'Aviso de privacidad creado correctamente', result, null, HttpStatus.CREATED);
-    }
-  
-    @ApiBearerAuth()
-    @UseGuards(AuthGuard)
-    @Get('getAvisoPrivacidadArchivo/:id')
-    async getAvisoPrivacidadArchivo(@Param('id', ParseIntPipe) id: number): Promise<ApiResponse<createAvisoPrivacidadArchivoDto>> {
-      const result = await this.avisoPrivaciadService.getAvisoPrivacidadArchivo(id);
-      return createApiResponse(true, 'Aviso de privacidad obtenido correctamente', result, null, HttpStatus.OK);
-    }
-  
-    @ApiBearerAuth()
-    @UseGuards(AuthGuard)
-    @Put('editAvisoPrivacidadArchivo')
-    @UseInterceptors(FileInterceptor('archivo'))
-    async editAvisoPrivacidadArchivo(
-      @Body() data: createAvisoPrivacidadArchivoDto,
-      // @UploadedFile() file: Express.Multer.File,
-    ): Promise<ApiResponse<any>> {
-      const result = await this.avisoPrivaciadService.editAvisoPrivacidadArchivo(data);
-      return createApiResponse(true, 'Aviso de privacidad editado correctamente', result, null, HttpStatus.OK);
-    }
-  
-    @ApiBearerAuth()
-    @UseGuards(AuthGuard)
-    @Delete('deleteAvisoPrivacidadArchivo/:id')
-    async deleteAvisoPrivacidadArchivo(@Param('id', ParseIntPipe) id: number): Promise<ApiResponse<void>> {
-      try {
-        await this.avisoPrivaciadService.deleteAvisoPrivacidadArchivo(id);
-        return createApiResponse(true, 'Documento y archivo eliminados exitosamente', null, null, HttpStatus.OK);
-      } catch (error) {
-        return createApiResponse(false, 'Error al eliminar documento y archivo', null, error.message, HttpStatus.INTERNAL_SERVER_ERROR);
-      }
-    }
+  // Otros Documentos
+  @Get('getOtrosDocumentos')
+  async getOtrosDocumentos(): Promise<ApiResponse<OtrosDocumentosDto[]>> {
+    return await this.avisoPrivaciadService.getOtrosDocumentos();
+  }
 
-    // @Post('getListAvisoPrivacidad')
-    // async getListAvisoPrivacidad(@Body() data: filterAvisoPrivacidadDto): Promise<ApiResponse<any[]>> {
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard)
+  @Post('createOtroDocumento')
+  @UseInterceptors(FileInterceptor('archivo'))
+  async createOtroDocumento(
+    @Body() data: createOtroDocumentoDto,
+    @UploadedFile() file: Express.Multer.File,
+  ): Promise<ApiResponse<any>> {
+    return await this.avisoPrivaciadService.createOtroDocumento(data, file);
+  }
 
-    //     const list = await this.avisoPrivaciadService.getListAvisoPrivacidad(data);
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard)
+  @Get('findOneOtroDocumento/:id')
+  async findOneOtroDocumento(@Param('id', ParseIntPipe) id: number): Promise<ApiResponse<createOtroDocumentoDto>> {
+    return await this.avisoPrivaciadService.findOneOtroDocumento(id);
+  }
 
-    //     return {
-    //         success: true,
-    //         statusCode: HttpStatus.OK,
-    //         message: 'Documents retrieved successfully',
-    //         data: list
-    //     };
-    // }
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard)
+  @Put('updateOtroDocumento')
+  @UseInterceptors(FileInterceptor('archivo'))
+  async updateOtroDocumento(
+    @Body() data: createOtroDocumentoDto,
+    @UploadedFile() file: Express.Multer.File,
+  ): Promise<ApiResponse<any>> {
+    return await this.avisoPrivaciadService.updateOtroDocumento(data, file);
+  }
 
-
-    // @Post('createAvisoPrivacidad')
-    // async createAvisoPrivacidad(@Body() data: createAvisoPrivacidadDto): Promise<ApiResponse<any>> {
-
-    //     const result = await this.avisoPrivaciadService.createAvisoPrivacidad(data);
-
-    //     return {
-    //         success: true,
-    //         statusCode: HttpStatus.CREATED,
-    //         message: 'Aviso de privacidad creado correctamente',
-    //         data: result
-    //     };
-
-    // }
-
-    // @Get('getAvisoPrivacidad/:id')
-    // async getAvisoPrivacidad(@Param('id', ParseIntPipe) id: number): Promise<ApiResponse<void>> {
-
-    //     const result = await this.avisoPrivaciadService.getAvisoPrivacidad(id);
-
-    //     return {
-    //         success: true,
-    //         statusCode: HttpStatus.CREATED,
-    //         message: 'Aviso de privacidad creado correctamente',
-    //         data: result
-    //     };
-    // }
-
-
-
-    // @Put('editAvisoPrivacidad')
-    // async editAvisoPrivacidad(@Body() data: createAvisoPrivacidadDto): Promise<ApiResponse<any>> {
-
-    //     const result = await this.avisoPrivaciadService.editAvisoPrivacidad(data);
-
-    //     return {
-    //         success: true,
-    //         statusCode: HttpStatus.CREATED,
-    //         message: 'Aviso de privacidad editado correctamente',
-    //         data: result
-    //     };
-
-    // }
-
-
-    // @Delete('deleteAvisoPrivacidad/:id')
-    // async deleteDocument(@Param('id', ParseIntPipe) id: number): Promise<ApiResponse<void>> {
-
-    //     try {
-    //         await this.avisoPrivaciadService.deleteAvisoPrivacidad(id);
-
-    //         return {
-    //             success: true,
-    //             statusCode: HttpStatus.OK,
-    //             message: 'Aviso de privacidad eliminado exitosamente',
-    //             data: null
-    //         };
-
-    //     } catch (error) {
-    //         console.error('Error al eliminar el aviso de privacidad:', error); // Log de error detallado
-    //         return {
-    //             success: false,
-    //             statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
-    //             message: 'Error al eliminar aviso de privacidad y archivo: ' + error.message, // Cambié `error` a `error.message`
-    //             data: null
-    //         };
-    //     }
-
-    // }
-
-
-
-    // @Post('createAvisoPrivacidadArchivo')
-    // @UseInterceptors(FileInterceptor('archivo'))
-    // async createAvisoPrivacidadArchivo(
-    //     @Body() data: createAvisoPrivacidadArchivoDto,
-    //     @UploadedFile() file: Express.Multer.File
-    // ): Promise<ApiResponse<any>> {
-
-    //     const result = await this.avisoPrivaciadService.createAvisoPrivacidadArchivo(data, file);
-
-    //     return {
-    //         success: true,
-    //         statusCode: HttpStatus.CREATED,
-    //         message: 'Aviso de privacidad creado correctamente',
-    //         data: result
-    //     };
-
-    // }
-
-
-    // @Get('getAvisoPrivacidadArchivo/:id')
-    // async getAvisoPrivacidadArchivo(@Param('id', ParseIntPipe) id: number): Promise<ApiResponse<void>> {
-
-    //     const result = await this.avisoPrivaciadService.getAvisoPrivacidadArchivo(id);
-
-    //     return {
-    //         success: true,
-    //         statusCode: HttpStatus.CREATED,
-    //         message: 'Aviso de privacidad creado correctamente',
-    //         data: result
-    //     }
-
-    // }
-
-
-    // @Put('editAvisoPrivacidadArchivo')
-    // @UseInterceptors(FileInterceptor('archivo'))
-    // async editAvisoPrivacidadArchivo(
-    //     @Body() data: createAvisoPrivacidadArchivoDto,
-    //     @UploadedFile() file: Express.Multer.File
-    // ): Promise<ApiResponse<any>> {
-
-    //     const result = await this.avisoPrivaciadService.editAvisoPrivacidadArchivo(data, file);
-
-    //     return {
-    //         success: true,
-    //         statusCode: HttpStatus.CREATED,
-    //         message: 'Aviso de privacidad editado correctamente',
-    //         data: result
-    //     };
-
-    // }
-
-
-    // @Delete('deleteAvisoPrivacidadArchivo/:id')
-    // async deleteAvisoPrivacidadArchivo(@Param('id', ParseIntPipe) id: number, @Res() res): Promise<ApiResponse<void>> {
-
-    //     try {
-    //         await this.avisoPrivaciadService.deleteAvisoPrivacidadArchivo(id);
-    //         return res.status(HttpStatus.OK).json({
-    //             success: true,
-    //             statusCode: HttpStatus.OK,
-    //             message: 'Documento y archivo eliminados exitosamente',
-    //         });
-    //     } catch (error) {
-    //         return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
-    //             success: false,
-    //             statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
-    //             message: 'Error al eliminar documento y archivo',
-    //             errors: error,
-    //         });
-    //     }
-
-    // }
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard)
+  @Delete('deleteOtroDocumento/:id')
+  async deleteOtroDocumento(@Param('id', ParseIntPipe) id: number): Promise<ApiResponse<any>> {
+    return await this.avisoPrivaciadService.deleteOtroDocumento(id);
+  }
 
 }
