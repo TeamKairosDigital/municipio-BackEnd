@@ -9,6 +9,7 @@ import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { avisoPrivacidadArchivos } from 'src/aviso-privacidad/entities/avisoPrivacidadArchivos.entity';
 import { Obras } from 'src/obras/entities/obras.entity';
+import { transparenciaOtrosDocumentos } from 'src/aviso-privacidad/entities/transparenciaOtrosDocumentos.entity';
 
 @Injectable()
 export class S3Service {
@@ -22,6 +23,8 @@ export class S3Service {
         private avisoPrivacidadArchivosRepository: Repository<avisoPrivacidadArchivos>,
         @InjectRepository(Obras)
         private readonly obrasRepository: Repository<Obras>,
+        @InjectRepository(transparenciaOtrosDocumentos)
+        private transparenciaOtrosDocumentosRespsitory: Repository<transparenciaOtrosDocumentos>,
     ) {
         this.client = new S3Client({
             endpoint: this.configService.get<string>('AWS_BUCKET_REGION'),  // Usamos el endpoint de DigitalOcean

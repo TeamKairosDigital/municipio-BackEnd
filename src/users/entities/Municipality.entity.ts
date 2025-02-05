@@ -4,6 +4,7 @@ import { Archivos } from '../../documentos/entities/archivos.entity';
 import { avisoPrivacidad } from '../../aviso-privacidad/entities/avisoPrivacidad.entity';
 import { Obras } from '../../obras/entities/obras.entity';
 import { FileesEntity } from '../../s3/entities/filees.entity';
+import { transparenciaOtrosDocumentos } from 'src/aviso-privacidad/entities/transparenciaOtrosDocumentos.entity';
 
 @Entity()
 export class Municipality {
@@ -39,4 +40,8 @@ export class Municipality {
     // Relación con la entidad Obras
     @OneToMany(() => FileesEntity, (file) => file.municipality)
     files: FileesEntity[];
+
+    // Relación con la entidad otros documentos
+    @OneToMany(() => transparenciaOtrosDocumentos, (OtroDocumento) => OtroDocumento.municipality)
+    transparenciaOtrosDocumentos: transparenciaOtrosDocumentos[];
 }
