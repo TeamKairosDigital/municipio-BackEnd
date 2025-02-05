@@ -126,6 +126,11 @@ export class AvisoPrivacidadController {
     return await this.avisoPrivaciadService.getOtrosDocumentos();
   }
 
+  @Get('getOtroDocumentorchivoWEB/:id')
+  async getOtroDocumentorchivoWEB(@Param('id', ParseIntPipe) id: number): Promise<ApiResponse<string>> {
+    return await this.avisoPrivaciadService.getOtroDocumentorchivoWEB(id);
+  }
+
   @ApiBearerAuth()
   @UseGuards(AuthGuard)
   @Post('createOtroDocumento')

@@ -355,15 +355,6 @@ export class AvisoPrivacidadService {
         throw new InternalServerErrorException('No se pudo obtener el archivo en base64');
       }
 
-      // const response: createAvisoPrivacidadArchivoDto = {
-      //   id: aviso.id,
-      //   nombreArchivo: aviso.nombreArchivo,
-      //   tipo: aviso.tipo,
-      //   Activo: aviso.Activo,
-      //   fechaCreacion: aviso.fechaCreacion,
-      //   url: base64File,
-      // };
-
       const response = base64File;
 
       return createApiResponse<string>(true, 'Archivo obtenido correctamente', response, null, 200);
@@ -393,6 +384,28 @@ export class AvisoPrivacidadService {
       return createApiResponse<OtrosDocumentosDto[]>(true, 'Lista obtenida correctamente', transformedList, null, 200);
     } catch (error) {
       throw new InternalServerErrorException('Error al obtener la lista de avisos de privacidad');
+    }
+  }
+
+  async getOtroDocumentorchivoWEB(id: number): Promise<ApiResponse<string>> {
+    try {
+      const documento = await this.transparenciaOtrosDocumentosRespsitory.findOne({ where: { id } });
+
+      if (!documento) {
+        throw new NotFoundException(`documento de privacidad archivo con ID ${id} no encontrado`);
+      }
+
+      const base64File = await this.s3Service.getFileBase64(documento.id, 'transparenciaOtrosDocumentosRespsitory', 'OtroDocumentos');
+
+      if (!base64File) {
+        throw new InternalServerErrorException('No se pudo obtener el archivo en base64');
+      }
+
+      const response = base64File;
+
+      return createApiResponse<string>(true, 'Archivo obtenido correctamente', response, null, 200);
+    } catch (error) {
+      throw new InternalServerErrorException('Error al obtener el archivo de aviso de privacidad');
     }
   }
 
