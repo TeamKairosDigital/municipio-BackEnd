@@ -24,7 +24,6 @@ export class ObrasService {
   // Crear nueva obra
   async create(data: CreateObrasDto, file: Express.Multer.File) {
     try {
-
           let uniqueFileName = null;
 
           if(data.nombreArchivo != null && data.nombreArchivo != '') {
