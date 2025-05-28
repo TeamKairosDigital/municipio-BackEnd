@@ -16,6 +16,7 @@ export class AuthController {
     // LOGIN
     @Post('login')
     async login(@Body() login: Login): Promise<ApiResponse<UserDataDto>> {
+        
         try {
             const response = await this.authService.validateUser(
                 login.username,
